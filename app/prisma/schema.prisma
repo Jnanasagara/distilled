@@ -16,12 +16,14 @@ model User {
   image         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  onboarded     Boolean   @default(false)
 
-  accounts Account[]
-  sessions Session[]
+  accounts    Account[]
+  sessions    Session[]
+  preferences UserPreference?
+  userTopics  UserTopic[]
 }
 
-// Required by NextAuth for OAuth providers
 model Account {
   id                String  @id @default(uuid())
   userId            String
@@ -56,4 +58,53 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Topic {
+  id          String      @id @default(uuid())
+  slug        String      @unique
+  name        String
+  description String?
+  emoji       String?
+  userTopics  UserTopic[]
+  createdAt   DateTime    @default(now())
+}
+
+model UserTopic {
+  id            String      @id @default(uuid())
+  userId        String
+  topicId       String
+  weight        Float       @default(1.0)
+  status        TopicStatus @default(ACTIVE)
+  lastEngagedAt DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, topicId])
+}
+
+enum TopicStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+model UserPreference {
+  id        String            @id @default(uuid())
+  userId    String            @unique
+  postCount Int               @default(20)
+  frequency CurationFrequency @default(DAILY)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum CurationFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
 }
