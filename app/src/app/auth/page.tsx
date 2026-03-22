@@ -1,37 +1,61 @@
 "use client";
 
+// Inside the component, add:
 import { useState } from "react";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function AuthPage() {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const router = useRouter(); 
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
+  e.preventDefault();
 
-    if (mode === "signup") {
-      const res = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
-      });
+  if (mode === "signup") {
+    const res = await fetch("/api/auth/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password }),
+    });
 
-      const data = await res.json();
+    const data = await res.json();
 
-      if (!res.ok) {
-        alert(data.error);
-        return;
-      }
-
-      alert("Account created successfully");
-      setMode("login");
+    if (!res.ok) {
+      alert(data.error);
       return;
     }
 
-    alert("Login not implemented yet");
+    // Auto login after signup
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+
+    if (result?.ok) {
+      router.push("/onboarding"); // we'll build this in Sprint 2
+    }
+    return;
   }
+
+  // Login flow
+  const result = await signIn("credentials", {
+    email,
+    password,
+    redirect: false,
+  });
+
+  if (!result?.ok) {
+    alert(result?.error ?? "Login failed");
+    return;
+  }
+
+  router.push("/dashboard"); // we'll build this later
+}
 
   return (
     <div
