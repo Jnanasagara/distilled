@@ -47,15 +47,20 @@ export async function POST(req: Request) {
       userId: string;
     };
 
-    // Use userId from body (passed by PreferencesForm) until NextAuth is ready
     const resolvedUserId = bodyUserId || userId;
 
     if (!Array.isArray(topicIds) || topicIds.length === 0) {
       return NextResponse.json({ error: "Select at least one topic" }, { status: 400 });
     }
-    if (postCount < 10 || postCount > 50) {
-      return NextResponse.json({ error: "Post count must be between 10 and 50" }, { status: 400 });
+
+    const maxPostCount = frequency === "MONTHLY" ? 100 : frequency === "WEEKLY" ? 60 : 30;
+    if (postCount < 10 || postCount > maxPostCount) {
+      return NextResponse.json(
+        { error: `Post count must be between 10 and ${maxPostCount}` },
+        { status: 400 }
+      );
     }
+
     if (!["DAILY", "WEEKLY", "MONTHLY"].includes(frequency)) {
       return NextResponse.json({ error: "Invalid frequency" }, { status: 400 });
     }

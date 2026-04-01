@@ -1,10 +1,22 @@
 import { NextResponse } from "next/server";
 import { ingestAllTopics } from "@/lib/ingest";
 import { scheduleIngestion } from "@/lib/queue";
+import { TimeFilter } from "@/lib/fetchers";
 
-export async function POST() {
+function frequencyToTimeFilter(frequency: string): TimeFilter {
+  switch (frequency) {
+    case "WEEKLY": return "week";
+    case "MONTHLY": return "month";
+    default: return "day";
+  }
+}
+
+// Manual trigger: POST /api/ingest
+export async function POST(req: Request) {
   try {
-    await ingestAllTopics();
+    const body = await req.json().catch(() => ({}));
+    const timeFilter = frequencyToTimeFilter(body.frequency ?? "DAILY");
+    await ingestAllTopics(timeFilter);
     return NextResponse.json({ success: true, message: "Ingestion complete" });
   } catch (error) {
     console.error("Ingest error:", error);
@@ -12,6 +24,7 @@ export async function POST() {
   }
 }
 
+// Scheduled trigger: GET /api/ingest
 export async function GET() {
   try {
     await scheduleIngestion();

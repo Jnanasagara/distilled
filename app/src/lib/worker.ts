@@ -11,7 +11,10 @@ export function startWorker() {
     "content-ingestion",
     async (job) => {
       console.log(`Processing job: ${job.name}`);
-      await ingestAllTopics();
+      
+      const timeFilter = job.data?.timeFilter ?? "day";
+      console.log(`Time filter: ${timeFilter}`);
+      await ingestAllTopics(timeFilter);
     },
     { connection }
   );

@@ -40,7 +40,8 @@ export default function PreferencesForm({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const maxPosts = frequency === "MONTHLY" ? 50 : 30;
+  const maxPosts = frequency === "MONTHLY" ? 100 : frequency === "WEEKLY" ? 60 : 30;
+
 
   function toggleTopic(id: string) {
     setSelectedTopics((prev) => {
@@ -53,7 +54,8 @@ export default function PreferencesForm({
 
   function handleFrequencyChange(val: "DAILY" | "WEEKLY" | "MONTHLY") {
     setFrequency(val);
-    if (val !== "MONTHLY" && postCount > 30) setPostCount(30);
+    if (val === "DAILY" && postCount > 30) setPostCount(30);
+    if (val === "WEEKLY" && postCount > 60) setPostCount(60);
   }
 
   async function handleSubmit() {
@@ -175,7 +177,7 @@ export default function PreferencesForm({
           <h2 className="section-title">Posts Per Session</h2>
           <p className="section-desc">
             How many posts do you want per session?
-            {frequency === "MONTHLY" ? " Up to 50 for monthly." : " Up to 30 for daily/weekly."}
+            {frequency === "MONTHLY" ? " Up to 100 for monthly." : frequency === "WEEKLY" ? " Up to 60 for weekly." : " Up to 30 for daily."}
           </p>
           <div className="slider-row">
             <input

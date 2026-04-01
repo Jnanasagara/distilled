@@ -18,6 +18,7 @@ export async function fetchDevTo(
         ? new Date(article.published_at)
         : undefined,
       source: "devto",
+      imageUrl: article.cover_image ?? article.social_image ?? null,
     }));
   } catch (error) {
     console.error("Dev.to fetch error:", error);

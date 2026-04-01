@@ -3,6 +3,7 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 const topics = [
+  { slug: "memes", name: "Memes", emoji: "😂", description: "Trending memes and internet humor" },
   { slug: "technology", name: "Technology", emoji: "💻", description: "Software, hardware, and the tech industry" },
   { slug: "artificial-intelligence", name: "Artificial Intelligence", emoji: "🤖", description: "ML, LLMs, AI research and applications" },
   { slug: "finance", name: "Finance", emoji: "📈", description: "Markets, investing, economics, and personal finance" },

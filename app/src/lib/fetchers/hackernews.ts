@@ -3,9 +3,11 @@ import axios from "axios";
 export interface FetchedItem {
   title: string;
   url: string;
+  sourceUrl?: string;   // ← add this
   author?: string;
   publishedAt?: Date;
   source: string;
+  imageUrl?: string | null;
 }
 
 export async function fetchHackerNews(limit = 30): Promise<FetchedItem[]> {
@@ -32,11 +34,13 @@ export async function fetchHackerNews(limit = 30): Promise<FetchedItem[]> {
       .map((r) => ({
         title: r.value.title,
         url: r.value.url,
+        sourceUrl: `https://news.ycombinator.com/item?id=${r.value.id}`,  // ← HN post URL
         author: r.value.by,
         publishedAt: r.value.time
           ? new Date(r.value.time * 1000)
           : undefined,
         source: "hackernews",
+        imageUrl: null,
       }));
   } catch (error) {
     console.error("HackerNews fetch error:", error);

@@ -22,6 +22,7 @@ model User {
   sessions    Session[]
   preferences UserPreference?
   userTopics  UserTopic[]
+  interactions Interaction[]
 }
 
 model Account {
@@ -114,13 +115,35 @@ model Content {
   id          String   @id @default(uuid())
   title       String
   url         String   @unique
+  sourceUrl   String?
   summary     String?
+  imageUrl    String?
   source      String   // "reddit" | "hackernews" | "devto" | "rss"
   topicId     String?
   author      String?
   publishedAt DateTime?
   fetchedAt   DateTime @default(now())
   createdAt   DateTime @default(now())
+  interactions Interaction[]
 
   topic Topic? @relation(fields: [topicId], references: [id])
+}
+
+model Interaction {
+  id        String          @id @default(uuid())
+  userId    String
+  contentId String
+  type      InteractionType
+  createdAt DateTime        @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, contentId, type])
+}
+
+enum InteractionType {
+  LIKE
+  CLICK
+  SAVE
 }
