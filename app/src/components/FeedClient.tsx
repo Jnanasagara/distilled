@@ -15,6 +15,8 @@ type Article = {
   publishedAt: string | null;
   isLiked: boolean;
   isSaved: boolean;
+  _isTrending?: boolean;
+  _reason?: string;
   topic: { name: string; emoji: string | null } | null;
 };
 
@@ -66,12 +68,13 @@ function ArticleCard({
   onLike: (id: string, liked: boolean) => void;
   onSave: (id: string, saved: boolean) => void;
 }) {
+  const [showReason, setShowReason] = useState(false);
   const sourceColor = SOURCE_COLORS[article.source] ?? "#888";
   const sourceLabel = SOURCE_LABELS[article.source] ?? article.source;
   const sourceEmoji = SOURCE_EMOJI[article.source] ?? "📰";
 
   return (
-    <div className="article-card">
+    <div className={`article-card ${article._isTrending ? "trending-card" : ""}`}>
       {article.imageUrl ? (
         <img
           src={article.imageUrl}
@@ -92,10 +95,19 @@ function ArticleCard({
               {article.topic.emoji} {article.topic.name}
             </span>
           )}
+          {article._isTrending && (
+            <span className="trending-badge">📈 Trending</span>
+          )}
         </div>
         <div className="article-title">{article.title}</div>
         {article.summary && (
           <div className="article-summary">{article.summary}</div>
+        )}
+        {showReason && article._reason && (
+          <div className="why-box">
+            <span className="why-label">Why this post?</span>
+            <span className="why-text">{article._reason}</span>
+          </div>
         )}
         <div className="article-footer">
           <span className="article-meta">
@@ -103,6 +115,13 @@ function ArticleCard({
             {timeAgo(article.publishedAt)}
           </span>
           <div className="article-links">
+            <button
+              className="why-btn"
+              onClick={() => setShowReason((p) => !p)}
+              title="Why this post?"
+            >
+              {showReason ? "✕" : "💡"}
+            </button>
             <button
               className={`action-btn ${article.isLiked ? "liked" : ""}`}
               onClick={() => onLike(article.id, article.isLiked)}
@@ -133,7 +152,6 @@ function ArticleCard({
               rel="noopener noreferrer"
               className="read-more"
               onClick={() => {
-                // Track click passively
                 fetch("/api/interactions", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
@@ -150,11 +168,14 @@ function ArticleCard({
   );
 }
 
+const PAGE_SIZE = 10;
+
 export default function FeedClient() {
   const router = useRouter();
   const [feed, setFeed] = useState<FeedData | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     fetch("/api/feed")
@@ -174,14 +195,12 @@ export default function FeedClient() {
       body: JSON.stringify({ contentId: articleId, type: "LIKE" }),
     });
     setFeed((prev) =>
-      prev
-        ? {
-            ...prev,
-            articles: prev.articles.map((a) =>
-              a.id === articleId ? { ...a, isLiked: !isLiked } : a
-            ),
-          }
-        : prev
+      prev ? {
+        ...prev,
+        articles: prev.articles.map((a) =>
+          a.id === articleId ? { ...a, isLiked: !isLiked } : a
+        ),
+      } : prev
     );
   }
 
@@ -193,14 +212,12 @@ export default function FeedClient() {
       body: JSON.stringify({ contentId: articleId, type: "SAVE" }),
     });
     setFeed((prev) =>
-      prev
-        ? {
-            ...prev,
-            articles: prev.articles.map((a) =>
-              a.id === articleId ? { ...a, isSaved: !isSaved } : a
-            ),
-          }
-        : prev
+      prev ? {
+        ...prev,
+        articles: prev.articles.map((a) =>
+          a.id === articleId ? { ...a, isSaved: !isSaved } : a
+        ),
+      } : prev
     );
   }
 
@@ -210,6 +227,14 @@ export default function FeedClient() {
     filter === "all"
       ? feed?.articles ?? []
       : (feed?.articles ?? []).filter((a) => a.source === filter);
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  function handleFilterChange(s: string) {
+    setFilter(s);
+    setPage(1);
+  }
 
   return (
     <>
@@ -234,23 +259,36 @@ export default function FeedClient() {
         .articles-grid { display: flex; flex-direction: column; gap: 16px; }
         .article-card { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 16px rgba(0,0,0,0.06); display: flex; transition: box-shadow 0.2s, transform 0.15s; color: inherit; cursor: default; }
         .article-card:hover { box-shadow: 0 4px 24px rgba(0,0,0,0.1); transform: translateY(-2px); }
+        .trending-card { border: 1.5px solid #fbbf24; }
         .article-image { width: 180px; min-width: 180px; height: 140px; object-fit: cover; background: #f3f4f6; }
         .article-image-placeholder { width: 180px; min-width: 180px; height: 140px; display: flex; align-items: center; justify-content: center; font-size: 32px; background: linear-gradient(135deg, #f0f0fc, #e8f0fe); }
         .article-body { padding: 18px 20px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
         .article-badges { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
         .source-badge { padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; }
         .topic-badge { padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 500; background: #ededf8; color: #4f52d3; }
+        .trending-badge { padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; background: #fef3c7; color: #d97706; }
         .article-title { font-family: 'Sora', sans-serif; font-size: 15px; font-weight: 700; color: #0f1132; line-height: 1.4; }
         .article-summary { font-size: 13px; color: #6b7280; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .why-box { background: #f8f9ff; border-left: 3px solid #4f52d3; border-radius: 6px; padding: 8px 12px; font-size: 12px; display: flex; flex-direction: column; gap: 2px; }
+        .why-label { font-weight: 700; color: #4f52d3; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .why-text { color: #374151; }
         .article-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
         .article-meta { font-size: 12px; color: #9ca3af; }
         .article-links { display: flex; gap: 12px; align-items: center; }
+        .why-btn { background: none; border: none; cursor: pointer; font-size: 15px; padding: 2px 4px; border-radius: 6px; transition: transform 0.15s; opacity: 0.6; }
+        .why-btn:hover { opacity: 1; transform: scale(1.2); }
         .action-btn { background: none; border: none; cursor: pointer; font-size: 16px; padding: 2px 4px; border-radius: 6px; transition: transform 0.15s; }
         .action-btn:hover { transform: scale(1.2); }
         .read-more { font-size: 13px; font-weight: 600; color: #4f52d3; text-decoration: none; }
         .read-more:hover { text-decoration: underline; }
         .discussion-link { font-size: 13px; font-weight: 500; color: #9ca3af; text-decoration: none; }
         .discussion-link:hover { color: #4f52d3; text-decoration: underline; }
+        .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 32px; }
+        .page-btn { padding: 8px 16px; border: 1.5px solid #e5e7eb; border-radius: 10px; background: #fff; font-size: 13px; font-weight: 600; color: #6b7280; cursor: pointer; transition: all 0.15s; }
+        .page-btn:hover:not(:disabled) { border-color: #4f52d3; color: #4f52d3; }
+        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .page-btn.active { background: #4f52d3; border-color: #4f52d3; color: #fff; }
+        .page-info { font-size: 13px; color: #9ca3af; }
         .loading { text-align: center; padding: 80px 0; color: #9ca3af; font-size: 15px; }
         .empty { text-align: center; padding: 80px 0; color: #9ca3af; }
         .empty h2 { font-family: 'Sora', sans-serif; font-size: 20px; color: #0f1132; margin-bottom: 8px; }
@@ -279,7 +317,10 @@ export default function FeedClient() {
         ) : (
           <>
             <p className="feed-meta">
-              Showing <span>{filtered.length}</span> articles from{" "}
+              Showing <span>{filtered.filter(a => !a._isTrending).length}</span> articles
+              {filtered.some(a => a._isTrending) && (
+                <> + <span>2 trending</span></>
+              )} from{" "}
               <span>{feed.preferences.topics.join(", ")}</span>
             </p>
             <div className="filter-bar">
@@ -287,14 +328,14 @@ export default function FeedClient() {
                 <button
                   key={s}
                   className={`filter-chip ${filter === s ? "active" : ""}`}
-                  onClick={() => setFilter(s)}
+                  onClick={() => handleFilterChange(s)}
                 >
                   {s === "all" ? "All" : SOURCE_LABELS[s]}
                 </button>
               ))}
             </div>
             <div className="articles-grid">
-              {filtered.map((article) => (
+              {paginated.map((article) => (
                 <ArticleCard
                   key={article.id}
                   article={article}
@@ -303,6 +344,25 @@ export default function FeedClient() {
                 />
               ))}
             </div>
+            {totalPages > 1 && (
+              <div className="pagination">
+                <button
+                  className="page-btn"
+                  onClick={() => setPage((p) => p - 1)}
+                  disabled={page === 1}
+                >
+                  ← Prev
+                </button>
+                <span className="page-info">Page {page} of {totalPages}</span>
+                <button
+                  className="page-btn"
+                  onClick={() => setPage((p) => p + 1)}
+                  disabled={page === totalPages}
+                >
+                  Next →
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>

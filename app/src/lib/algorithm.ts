@@ -136,3 +136,36 @@ export function diversifyFeed(articles: any[]): any[] {
   }
   return result;
 }
+
+// Generate "Why this post?" reason
+export function generateReason(
+  article: any,
+  topicWeightMap: Map<string, number>,
+  isTrending: boolean
+): string {
+  if (isTrending) return "📈 Trending outside your topics";
+
+  const weight = article.topicId
+    ? (topicWeightMap.get(article.topicId) ?? 1.0)
+    : 1.0;
+
+  const ageMs = Date.now() - new Date(article.publishedAt ?? article.createdAt).getTime();
+  const ageHours = ageMs / (1000 * 60 * 60);
+
+  const topicName = article.topic?.name ?? "this topic";
+  const emoji = article.topic?.emoji ?? "";
+
+  if (weight >= 2.0) return `${emoji} You engage a lot with ${topicName}`;
+  if (weight >= 1.5) return `${emoji} You've shown interest in ${topicName}`;
+  if (ageHours < 6) return `⚡ Published ${Math.round(ageHours)}h ago — very fresh`;
+  if (ageHours < 24) return `🕐 Published today from ${topicName}`;
+
+  const sourceLabels: Record<string, string> = {
+    reddit: "trending on Reddit",
+    hackernews: "popular on Hacker News",
+    devto: "featured on Dev.to",
+    rss: "from a trusted source",
+  };
+  const sourceReason = sourceLabels[article.source] ?? "from your feed";
+  return `${emoji} ${topicName} · ${sourceReason}`;
+}

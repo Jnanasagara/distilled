@@ -8,6 +8,7 @@ import {
   applyWeightDecay,
   suppressRedundancy,
   injectTrendSlots,
+  generateReason,
 } from "@/lib/algorithm";
 import { redis } from "@/lib/redis";
 
@@ -96,7 +97,6 @@ export async function GET(req: Request) {
     const scored = dedupedArticles
       .map((article) => {
         const score = scoreArticle(article, topicWeightMap, seenSources, seenTopics);
-        // Update seen counts
         seenSources.set(article.source, (seenSources.get(article.source) ?? 0) + 1);
         if (article.topicId) {
           seenTopics.set(article.topicId, (seenTopics.get(article.topicId) ?? 0) + 1);
@@ -126,11 +126,12 @@ export async function GET(req: Request) {
       interactions.filter((i) => i.type === "SAVE").map((i) => i.contentId)
     );
 
-    // Attach interaction state
+    // Attach interaction state + reason
     const articlesWithState = diversified.map((a) => ({
       ...a,
       isLiked: likedSet.has(a.id),
       isSaved: savedSet.has(a.id),
+      _reason: generateReason(a, topicWeightMap, a._isTrending ?? false),
     }));
 
     // Trend slot injection

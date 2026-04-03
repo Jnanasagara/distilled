@@ -35,16 +35,27 @@ export default function PreferencesForm({
 }: Props) {
   const router = useRouter();
   const [selectedTopics, setSelectedTopics] = useState<Set<string>>(new Set(initialTopicIds));
+  const [pausedTopics, setPausedTopics] = useState<Set<string>>(new Set());
   const [postCount, setPostCount] = useState(initialPostCount);
   const [frequency, setFrequency] = useState<"DAILY" | "WEEKLY" | "MONTHLY">(initialFrequency);
   const [saving, setSaving] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const [resetDone, setResetDone] = useState(false);
   const [error, setError] = useState("");
 
   const maxPosts = frequency === "MONTHLY" ? 100 : frequency === "WEEKLY" ? 60 : 30;
 
-
   function toggleTopic(id: string) {
     setSelectedTopics((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function togglePause(id: string) {
+    setPausedTopics((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
@@ -56,6 +67,33 @@ export default function PreferencesForm({
     setFrequency(val);
     if (val === "DAILY" && postCount > 30) setPostCount(30);
     if (val === "WEEKLY" && postCount > 60) setPostCount(60);
+  }
+
+  async function handleResetWeights() {
+    setResetting(true);
+    try {
+      await fetch("/api/preferences/reset", { method: "POST" });
+      setResetDone(true);
+      setTimeout(() => setResetDone(false), 3000);
+    } catch {
+      setError("Failed to reset weights.");
+    } finally {
+      setResetting(false);
+    }
+  }
+
+  async function handlePauseToggle(topicId: string) {
+    const isPaused = pausedTopics.has(topicId);
+    togglePause(topicId);
+    try {
+      await fetch("/api/preferences/pause", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topicId, paused: !isPaused }),
+      });
+    } catch {
+      togglePause(topicId); // revert on error
+    }
   }
 
   async function handleSubmit() {
@@ -98,12 +136,14 @@ export default function PreferencesForm({
         .pref-title { font-family: 'Sora', sans-serif; font-size: 24px; font-weight: 700; color: #0f1132; margin: 0 0 8px; }
         .pref-subtitle { color: #6b7280; font-size: 15px; margin: 0; }
         .section { width: 100%; max-width: 680px; background: #fff; border-radius: 20px; padding: 28px; margin-bottom: 20px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); }
-        .section-title { font-family: 'Sora', sans-serif; font-size: 16px; font-weight: 700; color: #0f1132; margin: 0 0 6px; }
+        .section-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+        .section-title { font-family: 'Sora', sans-serif; font-size: 16px; font-weight: 700; color: #0f1132; margin: 0; }
         .section-desc { font-size: 13px; color: #9ca3af; margin: 0 0 20px; }
         .topics-grid { display: flex; flex-wrap: wrap; gap: 10px; }
         .topic-chip { display: flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 999px; border: 1.5px solid #e5e7eb; background: #fafafa; color: #374151; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.15s ease; user-select: none; }
         .topic-chip:hover { border-color: #4f52d3; color: #4f52d3; background: #f0f0fc; }
         .topic-chip.selected { background: linear-gradient(135deg, #4f52d3, #3b82f6); border-color: transparent; color: #fff; box-shadow: 0 2px 10px rgba(79,82,211,0.3); }
+        .topic-chip.paused { opacity: 0.5; background: #f3f4f6; border-color: #e5e7eb; color: #9ca3af; }
         .freq-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
         .freq-card { border: 1.5px solid #e5e7eb; border-radius: 14px; padding: 16px; cursor: pointer; transition: all 0.15s ease; text-align: center; background: #fafafa; }
         .freq-card:hover { border-color: #4f52d3; background: #f0f0fc; }
@@ -121,6 +161,15 @@ export default function PreferencesForm({
         .submit-btn:hover { opacity: 0.92; transform: translateY(-1px); }
         .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
         .selected-count { font-size: 13px; color: #4f52d3; font-weight: 600; margin-bottom: 12px; }
+        .reset-btn { padding: 7px 14px; border: 1.5px solid #e5e7eb; border-radius: 10px; background: #fff; font-size: 12px; font-weight: 600; color: #6b7280; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+        .reset-btn:hover { border-color: #ef4444; color: #ef4444; }
+        .reset-btn.done { border-color: #10b981; color: #10b981; }
+        .pause-list { display: flex; flex-direction: column; gap: 10px; }
+        .pause-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-radius: 12px; background: #fafafa; border: 1.5px solid #e5e7eb; }
+        .pause-topic-name { font-size: 14px; font-weight: 500; color: #374151; display: flex; align-items: center; gap: 6px; }
+        .pause-toggle { padding: 5px 14px; border-radius: 999px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1.5px solid; transition: all 0.15s; }
+        .pause-toggle.active { background: #ededf8; border-color: #4f52d3; color: #4f52d3; }
+        .pause-toggle.paused { background: #fef3c7; border-color: #d97706; color: #d97706; }
       `}</style>
 
       <div className="pref-page">
@@ -145,7 +194,7 @@ export default function PreferencesForm({
               <button
                 key={topic.id}
                 type="button"
-                className={`topic-chip ${selectedTopics.has(topic.id) ? "selected" : ""}`}
+                className={`topic-chip ${selectedTopics.has(topic.id) ? "selected" : ""} ${pausedTopics.has(topic.id) ? "paused" : ""}`}
                 onClick={() => toggleTopic(topic.id)}
               >
                 {topic.emoji && <span>{topic.emoji}</span>}
@@ -154,6 +203,36 @@ export default function PreferencesForm({
             ))}
           </div>
         </div>
+
+        {mode === "preferences" && (
+          <div className="section">
+            <div className="section-header">
+              <div>
+                <h2 className="section-title">Pause Topics</h2>
+                <p className="section-desc" style={{ marginBottom: 16 }}>
+                  Temporarily hide a topic from your feed without removing it.
+                </p>
+              </div>
+            </div>
+            <div className="pause-list">
+              {topics
+                .filter((t) => selectedTopics.has(t.id))
+                .map((topic) => (
+                  <div key={topic.id} className="pause-row">
+                    <span className="pause-topic-name">
+                      {topic.emoji} {topic.name}
+                    </span>
+                    <button
+                      className={`pause-toggle ${pausedTopics.has(topic.id) ? "paused" : "active"}`}
+                      onClick={() => handlePauseToggle(topic.id)}
+                    >
+                      {pausedTopics.has(topic.id) ? "⏸ Paused" : "▶ Active"}
+                    </button>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
 
         <div className="section">
           <h2 className="section-title">Curation Frequency</h2>
@@ -193,6 +272,26 @@ export default function PreferencesForm({
           </div>
           <p className="slider-hint">10 minimum · {maxPosts} maximum for {frequency.toLowerCase()} feeds</p>
         </div>
+
+        {mode === "preferences" && (
+          <div className="section">
+            <div className="section-header">
+              <div>
+                <h2 className="section-title">Reset Feed Weights</h2>
+                <p className="section-desc" style={{ marginBottom: 0 }}>
+                  Reset the algorithm's topic weights back to default. Your feed will start fresh.
+                </p>
+              </div>
+              <button
+                className={`reset-btn ${resetDone ? "done" : ""}`}
+                onClick={handleResetWeights}
+                disabled={resetting}
+              >
+                {resetting ? "Resetting…" : resetDone ? "✓ Reset!" : "🔄 Reset Weights"}
+              </button>
+            </div>
+          </div>
+        )}
 
         {error && <p className="error-msg">{error}</p>}
 
