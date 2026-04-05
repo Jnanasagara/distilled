@@ -13,7 +13,21 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [checkEmail, setCheckEmail] = useState(false);
   const router = useRouter();
+
+  const searchParams = typeof window !== "undefined"
+    ? new URLSearchParams(window.location.search)
+    : null;
+  const verified = searchParams?.get("verified") === "1";
+  const tokenError = searchParams?.get("error");
+
+  const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+  const pwRules = mode === "signup" ? [
+    { label: "At least 8 characters", met: password.length >= 8 },
+    { label: "One uppercase letter", met: /[A-Z]/.test(password) },
+    { label: "One special character", met: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password) },
+  ] : [];
 
   async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -22,6 +36,17 @@ export default function AuthPage() {
 
     try {
       if (mode === "signup") {
+        if (!EMAIL_REGEX.test(email)) {
+          setError("Please enter a valid email address.");
+          setLoading(false);
+          return;
+        }
+        if (pwRules.some((r) => !r.met)) {
+          setError("Please meet all password requirements.");
+          setLoading(false);
+          return;
+        }
+
         const res = await fetch("/api/auth/signup", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -31,9 +56,7 @@ export default function AuthPage() {
         const data = await res.json();
         if (!res.ok) { setError(data.error); setLoading(false); return; }
 
-        const result = await signIn("credentials", { email, password, redirect: false });
-        if (result?.ok) router.push("/onboarding");
-        else setError("Account created but login failed. Please try logging in.");
+        setCheckEmail(true);
         setLoading(false);
         return;
       }
@@ -176,6 +199,18 @@ export default function AuthPage() {
         }
         .auth-eye-btn:hover { color: var(--text-heading); }
 
+        .pw-rules { display: flex; flex-direction: column; gap: 5px; margin-top: 8px; }
+        .pw-rule {
+          display: flex; align-items: center; gap: 6px;
+          font-size: 12px; color: var(--text-subtle); transition: color 0.2s ease;
+        }
+        .pw-rule.met { color: var(--text-success, #16a34a); }
+        .pw-rule-dot {
+          width: 6px; height: 6px; border-radius: 50%;
+          background: var(--border-default); flex-shrink: 0; transition: background 0.2s ease;
+        }
+        .pw-rule.met .pw-rule-dot { background: var(--text-success, #16a34a); }
+
         .auth-error {
           background: var(--bg-error); color: var(--text-error);
           font-size: 13px; font-weight: 500;
@@ -201,6 +236,29 @@ export default function AuthPage() {
           animation: spin 0.6s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        .auth-success {
+          background: var(--bg-success, #f0fdf4); color: var(--text-success, #16a34a);
+          font-size: 13px; font-weight: 500;
+          padding: 10px 14px; border-radius: 10px;
+          margin-bottom: 16px; text-align: center;
+        }
+
+        .check-email-icon {
+          width: 64px; height: 64px; border-radius: 16px;
+          background: var(--bg-accent); margin: 0 auto 20px;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 32px;
+        }
+        .check-email-title { font-size: 20px; font-weight: 800; color: var(--text-heading); margin: 0 0 8px; text-align: center; }
+        .check-email-text { font-size: 14px; color: var(--text-subtle); line-height: 1.6; text-align: center; margin: 0 0 24px; }
+        .check-email-btn {
+          width: 100%; padding: 13px; border: 1.5px solid var(--border-default);
+          border-radius: 12px; background: var(--bg-card);
+          font-family: inherit; font-size: 14px; font-weight: 600;
+          color: var(--text-muted); cursor: pointer; transition: all 0.2s ease;
+        }
+        .check-email-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--bg-accent); }
 
         .auth-footer { text-align: center; font-size: 13px; color: var(--text-subtle); margin-top: 20px; }
         .auth-footer-link {
@@ -241,6 +299,30 @@ export default function AuthPage() {
           </div>
 
           <div className="auth-card">
+            {checkEmail ? (
+              <>
+                <div className="check-email-icon">📬</div>
+                <h2 className="check-email-title">Check your email</h2>
+                <p className="check-email-text">
+                  We sent a verification link to <strong>{email}</strong>. Click it to activate your account.
+                  <br /><br />
+                  The link expires in 24 hours.
+                </p>
+                <button className="check-email-btn" onClick={() => { setCheckEmail(false); setMode("login"); }}>
+                  Back to Login
+                </button>
+              </>
+            ) : (
+            <>
+            {verified && (
+              <div className="auth-success">Email verified! You can now log in.</div>
+            )}
+            {tokenError === "expired-token" && (
+              <div className="auth-error">Verification link has expired. Please sign up again.</div>
+            )}
+            {(tokenError === "invalid-token" || tokenError === "missing-token") && (
+              <div className="auth-error">Invalid verification link. Please sign up again.</div>
+            )}
             <div className="auth-toggle">
               <button
                 type="button"
@@ -280,30 +362,42 @@ export default function AuthPage() {
                   required
                   autoComplete="email"
                 />
-                <div className="auth-password-wrap">
-                  <input
-                    className="auth-field"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    autoComplete={mode === "signup" ? "new-password" : "current-password"}
-                  />
-                  <button type="button" className="auth-eye-btn" onClick={() => setShowPassword((v) => !v)} tabIndex={-1} aria-label={showPassword ? "Hide password" : "Show password"}>
-                    {showPassword ? (
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
-                        <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-                        <line x1="1" y1="1" x2="23" y2="23" />
-                      </svg>
-                    ) : (
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                        <circle cx="12" cy="12" r="3" />
-                      </svg>
-                    )}
-                  </button>
+                <div>
+                  <div className="auth-password-wrap">
+                    <input
+                      className="auth-field"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                    />
+                    <button type="button" className="auth-eye-btn" onClick={() => setShowPassword((v) => !v)} tabIndex={-1} aria-label={showPassword ? "Hide password" : "Show password"}>
+                      {showPassword ? (
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                          <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                          <line x1="1" y1="1" x2="23" y2="23" />
+                        </svg>
+                      ) : (
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                  {mode === "signup" && password.length > 0 && (
+                    <div className="pw-rules">
+                      {pwRules.map((rule) => (
+                        <div key={rule.label} className={`pw-rule ${rule.met ? "met" : ""}`}>
+                          <span className="pw-rule-dot" />
+                          {rule.label}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -333,6 +427,8 @@ export default function AuthPage() {
                 {mode === "login" ? "Sign up" : "Login"}
               </button>
             </p>
+            </>
+            )}
           </div>
         </div>
       </div>

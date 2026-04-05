@@ -1,21 +1,27 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
-import { getMockUserId } from "@/lib/mock-auth";
+import { redis } from "@/lib/redis";
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
-    const userId = await getMockUserId();
-    if (!userId || userId === "MOCK_USER_PLACEHOLDER") {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const userId = session.user.id;
+
     const [preferences, userTopics] = await Promise.all([
       prisma.userPreference.findUnique({ where: { userId } }),
       prisma.userTopic.findMany({
-        where: { userId, status: "ACTIVE" },
+        where: { userId, status: { in: ["ACTIVE", "PAUSED"] } },
         include: { topic: true },
         orderBy: { createdAt: "asc" },
       }),
     ]);
+
     return NextResponse.json({
       preferences: preferences ?? { postCount: 20, frequency: "DAILY" },
       topics: userTopics.map((ut) => ({
@@ -35,19 +41,18 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const userId = await getMockUserId();
-    if (!userId || userId === "MOCK_USER_PLACEHOLDER") {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const userId = session.user.id;
     const body = await req.json();
-    const { topicIds, postCount, frequency, userId: bodyUserId } = body as {
+    const { topicIds, postCount, frequency } = body as {
       topicIds: string[];
       postCount: number;
       frequency: "DAILY" | "WEEKLY" | "MONTHLY";
-      userId: string;
     };
-
-    const resolvedUserId = bodyUserId || userId;
 
     if (!Array.isArray(topicIds) || topicIds.length === 0) {
       return NextResponse.json({ error: "Select at least one topic" }, { status: 400 });
@@ -66,31 +71,40 @@ export async function POST(req: Request) {
     }
 
     await prisma.userPreference.upsert({
-      where: { userId: resolvedUserId },
+      where: { userId },
       update: { postCount, frequency },
-      create: { userId: resolvedUserId, postCount, frequency },
+      create: { userId, postCount, frequency },
     });
 
-    const existingUserTopics = await prisma.userTopic.findMany({ where: { userId: resolvedUserId } });
+    const existingUserTopics = await prisma.userTopic.findMany({ where: { userId } });
     const existingMap = new Map(existingUserTopics.map((ut) => [ut.topicId, ut]));
 
     for (const topicId of topicIds) {
       const existing = existingMap.get(topicId);
       if (existing) {
-        await prisma.userTopic.update({ where: { id: existing.id }, data: { status: "ACTIVE" } });
+        // Only change to ACTIVE if it was INACTIVE — preserve PAUSED state
+        if (existing.status === "INACTIVE") {
+          await prisma.userTopic.update({ where: { id: existing.id }, data: { status: "ACTIVE" } });
+        }
       } else {
-        await prisma.userTopic.create({ data: { userId: resolvedUserId, topicId, weight: 1.0, status: "ACTIVE" } });
+        await prisma.userTopic.create({ data: { userId, topicId, weight: 1.0, status: "ACTIVE" } });
       }
       existingMap.delete(topicId);
     }
 
+    // Topics not in the new selection → mark INACTIVE
     for (const [, ut] of existingMap.entries()) {
-      if (ut.status === "ACTIVE") {
+      if (ut.status === "ACTIVE" || ut.status === "PAUSED") {
         await prisma.userTopic.update({ where: { id: ut.id }, data: { status: "INACTIVE" } });
       }
     }
 
-    await prisma.user.update({ where: { id: resolvedUserId }, data: { onboarded: true } });
+    await prisma.user.update({ where: { id: userId }, data: { onboarded: true } });
+
+    // Invalidate feed cache so next load reflects the new preferences
+    try {
+      await redis.del(`feed:${userId}`);
+    } catch {}
 
     return NextResponse.json({ success: true });
   } catch (error) {

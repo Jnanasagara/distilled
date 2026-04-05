@@ -1,10 +1,17 @@
 import { Worker } from "bullmq";
 import { ingestAllTopics } from "@/lib/ingest";
 
-const connection = {
-  host: "localhost",
-  port: 6379,
-};
+function getRedisConnection() {
+  const redisUrl = process.env.REDIS_URL ?? "redis://localhost:6379";
+  const parsed = new URL(redisUrl);
+  return {
+    host: parsed.hostname,
+    port: parsed.port ? parseInt(parsed.port) : 6379,
+    password: parsed.password || undefined,
+  };
+}
+
+const connection = getRedisConnection();
 
 export function startWorker() {
   const worker = new Worker(

@@ -281,11 +281,7 @@ export default function FeedClient() {
 
   async function handleLike(articleId: string, isLiked: boolean) {
     const method = isLiked ? "DELETE" : "POST";
-    await fetch("/api/interactions", {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contentId: articleId, type: "LIKE" }),
-    });
+    // Optimistic update
     setFeed((prev) =>
       prev ? {
         ...prev,
@@ -294,15 +290,29 @@ export default function FeedClient() {
         ),
       } : prev
     );
+    try {
+      const res = await fetch("/api/interactions", {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contentId: articleId, type: "LIKE" }),
+      });
+      if (!res.ok) throw new Error();
+    } catch {
+      // Rollback on failure
+      setFeed((prev) =>
+        prev ? {
+          ...prev,
+          articles: prev.articles.map((a) =>
+            a.id === articleId ? { ...a, isLiked } : a
+          ),
+        } : prev
+      );
+    }
   }
 
   async function handleSave(articleId: string, isSaved: boolean) {
     const method = isSaved ? "DELETE" : "POST";
-    await fetch("/api/interactions", {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contentId: articleId, type: "SAVE" }),
-    });
+    // Optimistic update
     setFeed((prev) =>
       prev ? {
         ...prev,
@@ -311,6 +321,24 @@ export default function FeedClient() {
         ),
       } : prev
     );
+    try {
+      const res = await fetch("/api/interactions", {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contentId: articleId, type: "SAVE" }),
+      });
+      if (!res.ok) throw new Error();
+    } catch {
+      // Rollback on failure
+      setFeed((prev) =>
+        prev ? {
+          ...prev,
+          articles: prev.articles.map((a) =>
+            a.id === articleId ? { ...a, isSaved } : a
+          ),
+        } : prev
+      );
+    }
   }
 
   const sources = ["all", "hackernews", "reddit", "devto", "rss"];
@@ -654,7 +682,7 @@ export default function FeedClient() {
               <h1 className="feed-greeting">Your Feed</h1>
               <p className="feed-subtitle">
                 <strong>{filtered.filter(a => !a._isTrending).length}</strong> articles
-                {filtered.some(a => a._isTrending) && <> + <strong>2 trending</strong></>}
+                {(() => { const n = filtered.filter(a => a._isTrending).length; return n > 0 ? <> + <strong>{n} trending</strong></> : null; })()}
                 {" "}from{" "}
                 <strong>{feed.preferences.topics.join(", ")}</strong>
               </p>

@@ -16,7 +16,7 @@ export async function POST(req: Request) {
 
     await prisma.userTopic.update({
       where: { userId_topicId: { userId, topicId } },
-      data: { status: paused ? "INACTIVE" : "ACTIVE" },
+      data: { status: paused ? "PAUSED" : "ACTIVE" },
     });
 
     try {

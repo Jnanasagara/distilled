@@ -14,6 +14,7 @@ type Topic = {
 type Props = {
   topics: Topic[];
   initialTopicIds?: string[];
+  initialPausedTopicIds?: string[];
   initialPostCount?: number;
   initialFrequency?: "DAILY" | "WEEKLY" | "MONTHLY";
   mode: "onboarding" | "preferences";
@@ -29,6 +30,7 @@ const FREQUENCY_OPTIONS = [
 export default function PreferencesForm({
   topics,
   initialTopicIds = [],
+  initialPausedTopicIds = [],
   initialPostCount = 20,
   initialFrequency = "DAILY",
   mode,
@@ -36,7 +38,7 @@ export default function PreferencesForm({
 }: Props) {
   const router = useRouter();
   const [selectedTopics, setSelectedTopics] = useState<Set<string>>(new Set(initialTopicIds));
-  const [pausedTopics, setPausedTopics] = useState<Set<string>>(new Set());
+  const [pausedTopics, setPausedTopics] = useState<Set<string>>(new Set(initialPausedTopicIds));
   const [postCount, setPostCount] = useState(initialPostCount);
   const [frequency, setFrequency] = useState<"DAILY" | "WEEKLY" | "MONTHLY">(initialFrequency);
   const [saving, setSaving] = useState(false);

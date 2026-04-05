@@ -25,7 +25,6 @@ export async function fetchRSS(
         return {
           title: item.title ?? "",
           url: item.link ?? "",
-          sourceUrl: item.link ?? "",
           author: item.creator || item.author || null,
           publishedAt: item.pubDate ? new Date(item.pubDate) : undefined,
           source: "rss",

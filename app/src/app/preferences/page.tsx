@@ -12,15 +12,22 @@ export default async function PreferencesPage() {
   const [topics, userPrefs, userTopics] = await Promise.all([
     prisma.topic.findMany({ orderBy: { name: "asc" } }),
     prisma.userPreference.findUnique({ where: { userId } }),
-    prisma.userTopic.findMany({ where: { userId, status: "ACTIVE" }, select: { topicId: true } }),
+    prisma.userTopic.findMany({
+      where: { userId, status: { in: ["ACTIVE", "PAUSED"] } },
+      select: { topicId: true, status: true },
+    }),
   ]);
+
+  const allSelectedTopicIds = userTopics.map((ut) => ut.topicId);
+  const pausedTopicIds = userTopics.filter((ut) => ut.status === "PAUSED").map((ut) => ut.topicId);
 
   return (
     <PreferencesForm
       topics={topics}
       mode="preferences"
       userId={userId}
-      initialTopicIds={userTopics.map((ut) => ut.topicId)}
+      initialTopicIds={allSelectedTopicIds}
+      initialPausedTopicIds={pausedTopicIds}
       initialPostCount={userPrefs?.postCount ?? 20}
       initialFrequency={(userPrefs?.frequency as "DAILY" | "WEEKLY" | "MONTHLY") ?? "DAILY"}
     />

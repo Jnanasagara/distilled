@@ -90,6 +90,7 @@ model UserTopic {
 
 enum TopicStatus {
   ACTIVE
+  PAUSED
   INACTIVE
   ARCHIVED
 }
