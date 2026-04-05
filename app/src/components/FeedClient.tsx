@@ -38,6 +38,13 @@ const SOURCE_COLORS: Record<string, string> = {
   rss: "#FFA500",
 };
 
+const FALLBACK_GRADIENTS: Record<string, string> = {
+  reddit:      "linear-gradient(135deg, #FF4500 0%, #FF6534 100%)",
+  hackernews:  "linear-gradient(135deg, #FF6600 0%, #FF8C33 100%)",
+  devto:       "linear-gradient(135deg, #3B49DF 0%, #6470F0 100%)",
+  rss:         "linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)",
+};
+
 const SOURCE_LABELS: Record<string, string> = {
   reddit: "Reddit",
   hackernews: "Hacker News",
@@ -143,9 +150,16 @@ function ArticleCard({
             />
           </>
         ) : (
-          <div className="card-image-fallback">
-            <span className="fallback-emoji">{sourceEmoji}</span>
-            <span className="fallback-source">{sourceLabel}</span>
+          <div
+            className="card-image-fallback"
+            style={{ background: FALLBACK_GRADIENTS[article.source] ?? "linear-gradient(135deg, #6366f1, #8b5cf6)" }}
+          >
+            <span className="fallback-emoji" style={{ fontSize: 44 }}>
+              {article.topic?.emoji ?? sourceEmoji}
+            </span>
+            <span className="fallback-source" style={{ color: "rgba(255,255,255,0.85)", fontWeight: 700 }}>
+              {article.topic?.name ?? sourceLabel}
+            </span>
           </div>
         )}
         <div className="card-image-overlay">
@@ -638,6 +652,13 @@ export default function FeedClient() {
               </svg>
               <span>Saved</span>
             </button>
+            <button className="nav-btn" onClick={() => router.push("/profile")}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              <span>Profile</span>
+            </button>
             <button className="nav-btn primary" onClick={() => router.push("/preferences")}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="3" />
@@ -645,7 +666,7 @@ export default function FeedClient() {
               </svg>
               <span>Preferences</span>
             </button>
-            <button className="nav-btn" onClick={() => signOut({ callbackUrl: "/auth" })} title="Logout">
+            <button className="nav-btn" onClick={() => signOut({ callbackUrl: `${window.location.origin}/auth` })} title="Logout">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                 <polyline points="16 17 21 12 16 7" />

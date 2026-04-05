@@ -26,6 +26,13 @@ const SOURCE_COLORS: Record<string, string> = {
   rss: "#FFA500",
 };
 
+const FALLBACK_GRADIENTS: Record<string, string> = {
+  reddit:     "linear-gradient(135deg, #FF4500 0%, #FF6534 100%)",
+  hackernews: "linear-gradient(135deg, #FF6600 0%, #FF8C33 100%)",
+  devto:      "linear-gradient(135deg, #3B49DF 0%, #6470F0 100%)",
+  rss:        "linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)",
+};
+
 const SOURCE_LABELS: Record<string, string> = {
   reddit: "Reddit",
   hackernews: "Hacker News",
@@ -113,8 +120,16 @@ function SavedCard({
             />
           </>
         ) : (
-          <div className="saved-card-img-fallback">
-            <span className="saved-fallback-emoji">{sourceEmoji}</span>
+          <div
+            className="saved-card-img-fallback"
+            style={{ background: FALLBACK_GRADIENTS[article.source] ?? "linear-gradient(135deg, #6366f1, #8b5cf6)" }}
+          >
+            <span className="saved-fallback-emoji" style={{ fontSize: 44 }}>
+              {article.topic?.emoji ?? sourceEmoji}
+            </span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.85)", marginTop: 4 }}>
+              {article.topic?.name ?? sourceLabel}
+            </span>
           </div>
         )}
         <span className="saved-source-pill" style={{ background: sourceColor }}>
@@ -407,7 +422,7 @@ export default function SavedClient() {
               </svg>
               Back to Feed
             </button>
-            <button className="saved-back-btn" onClick={() => signOut({ callbackUrl: "/auth" })} title="Logout">
+            <button className="saved-back-btn" onClick={() => signOut({ callbackUrl: `${window.location.origin}/auth` })} title="Logout">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                 <polyline points="16 17 21 12 16 7" />
