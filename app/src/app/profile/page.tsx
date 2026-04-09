@@ -6,6 +6,7 @@ import ProfileClient from "@/components/ProfileClient";
 export default async function ProfilePage() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) redirect("/auth");
+  if (session.user.role === "ADMIN") redirect("/admin");
 
   return <ProfileClient />;
 }

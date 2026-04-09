@@ -7,6 +7,7 @@ import PreferencesForm from "@/components/PreferencesForm";
 export default async function PreferencesPage() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) redirect("/auth");
+  if (session.user.role === "ADMIN") redirect("/admin");
 
   const userId = session.user.id;
   const [topics, userPrefs, userTopics] = await Promise.all([

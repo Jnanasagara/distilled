@@ -4,14 +4,17 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:seed": "tsx prisma/seed.ts",
+    "worker": "tsx worker-standalone.ts"
   },
   "dependencies": {
     "@google/genai": "^1.46.0",
     "@prisma/client": "^5.22.0",
     "axios": "^1.13.6",
+    "tsx": "^4.21.0",
     "bcrypt": "^6.0.0",
     "bullmq": "^5.71.0",
     "cheerio": "^1.2.0",
@@ -35,7 +38,6 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",
-    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }

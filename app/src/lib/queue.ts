@@ -20,39 +20,30 @@ export const contentQueue = new Queue("content-ingestion", {
   },
 });
 
+// upsertJobScheduler is idempotent — safe to call on every server start.
+// It updates the existing schedule if one with the same schedulerId already
+// exists in Redis, rather than creating a duplicate job.
 export async function scheduleIngestion() {
-  // Daily ingest — every 6 hours
-  await contentQueue.add(
-    "ingest-daily",
-    { timeFilter: "day" },
-    {
-      repeat: {
-        every: 1000 * 60 * 60 * 6, // 6 hours
-      },
-    }
+  // Refresh "top of day" content every 6 hours
+  await contentQueue.upsertJobScheduler(
+    "ingest-fresh",                       // stable scheduler ID
+    { every: 1000 * 60 * 60 * 6 },       // every 6 hours
+    { name: "ingest-fresh", data: { timeFilter: "day" } }
   );
 
-  // Weekly ingest — every 24 hours
-  await contentQueue.add(
-    "ingest-weekly",
-    { timeFilter: "week" },
-    {
-      repeat: {
-        every: 1000 * 60 * 60 * 24, // 24 hours
-      },
-    }
+  // Pull in week-old trending content once per day
+  await contentQueue.upsertJobScheduler(
+    "ingest-trending",
+    { every: 1000 * 60 * 60 * 24 },      // every 24 hours
+    { name: "ingest-trending", data: { timeFilter: "week" } }
   );
 
-  // Monthly ingest — every 3 days
-  await contentQueue.add(
-    "ingest-monthly",
-    { timeFilter: "month" },
-    {
-      repeat: {
-        every: 1000 * 60 * 60 * 24 * 3, // 72 hours
-      },
-    }
+  // Backfill deep archive content every 3 days
+  await contentQueue.upsertJobScheduler(
+    "ingest-archive",
+    { every: 1000 * 60 * 60 * 24 * 3 },  // every 3 days
+    { name: "ingest-archive", data: { timeFilter: "month" } }
   );
 
-  console.log("✅ Ingestion jobs scheduled (daily/weekly/monthly)");
+  console.log("✅ Ingestion schedules registered (fresh/trending/archive)");
 }

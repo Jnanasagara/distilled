@@ -3,8 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
 import {
-  scoreArticle,
-  diversifyFeed,
+  greedyDiverseSelect,
   applyWeightDecay,
   suppressRedundancy,
   injectTrendSlots,
@@ -14,15 +13,18 @@ import { redis } from "@/lib/redis";
 
 const CACHE_TTL = 60 * 15; // 15 minutes
 
+// Weekly/monthly users check less often so we serve a larger batch.
+// We floor at 60/100 so infrequent users always get a full reading session,
+// even if they set a low postCount when they were a daily user.
 function frequencyToPostCount(frequency: string, userPostCount: number): number {
   switch (frequency) {
     case "WEEKLY":  return Math.max(userPostCount, 60);
     case "MONTHLY": return Math.max(userPostCount, 100);
-    default:        return userPostCount;
+    default:        return userPostCount; // DAILY — respect user's setting directly
   }
 }
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -90,24 +92,9 @@ export async function GET(req: Request) {
     // Redundancy suppression
     const dedupedArticles = suppressRedundancy(rawArticles);
 
-    // Composite scoring with source + topic diversity tracking
-    const seenSources = new Map<string, number>();
-    const seenTopics = new Map<string, number>();
-
-    const scored = dedupedArticles
-      .map((article) => {
-        const score = scoreArticle(article, topicWeightMap, seenSources, seenTopics);
-        seenSources.set(article.source, (seenSources.get(article.source) ?? 0) + 1);
-        if (article.topicId) {
-          seenTopics.set(article.topicId, (seenTopics.get(article.topicId) ?? 0) + 1);
-        }
-        return { ...article, _score: score };
-      })
-      .sort((a, b) => b._score - a._score)
-      .slice(0, Math.floor(postCount * 1.5));
-
-    // Diversity pass
-    const diversified = diversifyFeed(scored).slice(0, postCount);
+    // Greedy diversity-aware selection — scores each candidate against what's
+    // already been picked, so diversity penalties are accurate (not pre-sort guesses)
+    const diversified = greedyDiverseSelect(dedupedArticles, topicWeightMap, postCount);
 
     // Fetch liked/saved interactions
     const articleIds = diversified.map((a) => a.id);

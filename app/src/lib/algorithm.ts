@@ -1,11 +1,26 @@
 import { prisma } from "@/lib/prisma";
+import { redis } from "@/lib/redis";
 
-// Exponential decay — reduces topic weights over time if not engaged
+// Exponential decay — reduces topic weights over time if not engaged.
+// Rate-limited to once per hour per user via Redis to avoid running expensive
+// DB writes on every feed request.
 export async function applyWeightDecay(userId: string) {
+  const decayKey = `decay:${userId}`;
+
+  try {
+    const alreadyRan = await redis.get(decayKey);
+    if (alreadyRan) return; // already ran within the last hour
+    // Mark as ran; expires in 1 hour
+    await redis.set(decayKey, "1", "EX", 60 * 60);
+  } catch {
+    // Redis unavailable — run decay anyway (fallback)
+  }
+
   const userTopics = await prisma.userTopic.findMany({
     where: { userId, status: "ACTIVE" },
   });
 
+  const updates: Promise<unknown>[] = [];
   for (const ut of userTopics) {
     if (!ut.lastEngagedAt) continue;
     const daysSinceEngaged =
@@ -13,50 +28,83 @@ export async function applyWeightDecay(userId: string) {
     if (daysSinceEngaged > 3) {
       const decayFactor = Math.exp(-0.05 * daysSinceEngaged);
       const newWeight = Math.max(ut.weight * decayFactor, 0.1);
-      await prisma.userTopic.update({
-        where: { id: ut.id },
-        data: { weight: newWeight },
-      });
+      updates.push(
+        prisma.userTopic.update({
+          where: { id: ut.id },
+          data: { weight: parseFloat(newWeight.toFixed(4)) },
+        })
+      );
     }
   }
+
+  if (updates.length > 0) await Promise.all(updates);
 }
 
-// Source diversity bonus — reward variety of sources
-function sourceBonus(source: string, seenSources: Map<string, number>): number {
-  const count = seenSources.get(source) ?? 0;
-  // Each repeated source gets a 10% penalty
-  return Math.pow(0.9, count);
-}
-
-// Composite scoring pipeline
+// Compute base score for an article (topic weight × recency × image bonus).
+// Diversity penalties are applied separately in the greedy selection pass.
 export function scoreArticle(
   article: any,
-  topicWeightMap: Map<string, number>,
-  seenSources: Map<string, number>,
-  seenTopics: Map<string, number>
+  topicWeightMap: Map<string, number>
 ): number {
   // 1. Topic weight score
   const weight = article.topicId
     ? (topicWeightMap.get(article.topicId) ?? 1.0)
     : 1.0;
 
-  // 2. Recency score — decays over 72 hours
+  // 2. Recency score — exponential decay, half-life ~24 hours over 72h window
   const ageMs = Date.now() - new Date(article.publishedAt ?? article.createdAt).getTime();
   const ageHours = ageMs / (1000 * 60 * 60);
   const recencyScore = Math.exp(-ageHours / 72);
 
-  // 3. Source diversity bonus
-  const srcBonus = sourceBonus(article.source, seenSources);
-
-  // 4. Topic diversity bonus — penalize same topic appearing too much
-  const topicCount = article.topicId ? (seenTopics.get(article.topicId) ?? 0) : 0;
-  const topicBonus = Math.pow(0.85, topicCount);
-
-  // 5. Image bonus — articles with images get a small boost
+  // 3. Image bonus — small boost for visual articles
   const imageBonus = article.imageUrl ? 1.05 : 1.0;
 
-  // Composite score
-  return weight * recencyScore * srcBonus * topicBonus * imageBonus;
+  return weight * recencyScore * imageBonus;
+}
+
+// Greedy diversity-aware selection.
+// After ranking by base score, re-score each candidate article using penalties
+// based on what has ALREADY been selected — giving accurate diversity bonuses.
+export function greedyDiverseSelect(
+  candidates: any[],
+  topicWeightMap: Map<string, number>,
+  limit: number
+): any[] {
+  const selected: any[] = [];
+  const remaining = [...candidates];
+  const seenSources = new Map<string, number>();
+  const seenTopics = new Map<string, number>();
+
+  while (selected.length < limit && remaining.length > 0) {
+    // Score each remaining article against the current seen-state
+    let bestIdx = 0;
+    let bestScore = -Infinity;
+
+    for (let i = 0; i < remaining.length; i++) {
+      const a = remaining[i];
+      const base = scoreArticle(a, topicWeightMap);
+
+      // Source penalty: each repeated source gets 10% discount
+      const srcCount = seenSources.get(a.source) ?? 0;
+      const srcBonus = Math.pow(0.9, srcCount);
+
+      // Topic penalty: penalise same topic clustering
+      const topicCount = a.topicId ? (seenTopics.get(a.topicId) ?? 0) : 0;
+      const topicBonus = Math.pow(0.85, topicCount);
+
+      const score = base * srcBonus * topicBonus;
+      if (score > bestScore) { bestScore = score; bestIdx = i; }
+    }
+
+    const chosen = remaining.splice(bestIdx, 1)[0];
+    selected.push({ ...chosen, _score: bestScore });
+    seenSources.set(chosen.source, (seenSources.get(chosen.source) ?? 0) + 1);
+    if (chosen.topicId) {
+      seenTopics.set(chosen.topicId, (seenTopics.get(chosen.topicId) ?? 0) + 1);
+    }
+  }
+
+  return selected;
 }
 
 // Redundancy suppression — remove near-duplicate titles

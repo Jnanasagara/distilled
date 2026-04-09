@@ -8,15 +8,18 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(uuid())
-  name          String?
-  email         String    @unique
-  password      String?
-  emailVerified DateTime?
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  onboarded     Boolean   @default(false)
+  id                  String    @id @default(uuid())
+  name                String?
+  email               String    @unique
+  password            String?
+  emailVerified       DateTime?
+  image               String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  onboarded           Boolean   @default(false)
+  role                UserRole  @default(USER)
+  isBanned            Boolean   @default(false)
+  mustChangePassword  Boolean   @default(false)
 
   accounts    Account[]
   sessions    Session[]
@@ -59,6 +62,20 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model PasswordResetToken {
+  id         String   @id @default(uuid())
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+enum UserRole {
+  USER
+  ADMIN
 }
 
 model Topic {

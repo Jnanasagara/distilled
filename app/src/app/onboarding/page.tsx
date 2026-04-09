@@ -7,6 +7,7 @@ import PreferencesForm from "@/components/PreferencesForm";
 export default async function OnboardingPage() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) redirect("/auth");
+  if (session.user.role === "ADMIN") redirect("/admin");
 
   const topics = await prisma.topic.findMany({ orderBy: { name: "asc" } });
 

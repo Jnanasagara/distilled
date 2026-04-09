@@ -14,6 +14,13 @@ export async function POST(req: Request) {
     const userId = session.user.id;
     const { topicId, paused } = await req.json();
 
+    if (!topicId || typeof topicId !== "string") {
+      return NextResponse.json({ error: "Topic ID is required" }, { status: 400 });
+    }
+    if (typeof paused !== "boolean") {
+      return NextResponse.json({ error: "Paused must be a boolean" }, { status: 400 });
+    }
+
     await prisma.userTopic.update({
       where: { userId_topicId: { userId, topicId } },
       data: { status: paused ? "PAUSED" : "ACTIVE" },

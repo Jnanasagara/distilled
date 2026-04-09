@@ -13,6 +13,7 @@ export async function fetchDevTo(
     return data.map((article: any) => ({
       title: article.title,
       url: article.url,
+      sourceUrl: article.url,   // Dev.to article page is the canonical source
       author: article.user?.name,
       publishedAt: article.published_at
         ? new Date(article.published_at)

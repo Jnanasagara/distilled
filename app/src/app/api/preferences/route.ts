@@ -58,8 +58,27 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Select at least one topic" }, { status: 400 });
     }
 
+    // Prevent sending an arbitrarily large topic list
+    if (topicIds.length > 50) {
+      return NextResponse.json({ error: "Too many topics selected" }, { status: 400 });
+    }
+
+    // Ensure all submitted IDs are strings (not injected objects)
+    if (topicIds.some((id) => typeof id !== "string")) {
+      return NextResponse.json({ error: "Invalid topic IDs" }, { status: 400 });
+    }
+
+    // Validate every submitted topicId actually exists in the database
+    const validTopics = await prisma.topic.findMany({
+      where: { id: { in: topicIds } },
+      select: { id: true },
+    });
+    if (validTopics.length !== topicIds.length) {
+      return NextResponse.json({ error: "One or more topics are invalid" }, { status: 400 });
+    }
+
     const maxPostCount = frequency === "MONTHLY" ? 100 : frequency === "WEEKLY" ? 60 : 30;
-    if (postCount < 10 || postCount > maxPostCount) {
+    if (typeof postCount !== "number" || postCount < 10 || postCount > maxPostCount) {
       return NextResponse.json(
         { error: `Post count must be between 10 and ${maxPostCount}` },
         { status: 400 }

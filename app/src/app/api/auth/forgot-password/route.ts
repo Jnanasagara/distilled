@@ -1,0 +1,51 @@
+import { NextResponse } from "next/server";
+import { randomUUID } from "crypto";
+import { prisma } from "@/lib/prisma";
+import { sendPasswordResetEmail } from "@/lib/email";
+import { rateLimit, getIp, rateLimitedResponse } from "@/lib/rate-limit";
+
+export async function POST(req: Request) {
+  // 3 reset requests per hour per IP — prevents email spam and enumeration floods
+  const { limited } = await rateLimit(`forgot:${getIp(req)}`, 3, 3600);
+  if (limited) return rateLimitedResponse(3600);
+
+  try {
+    const { email } = await req.json();
+
+    if (!email) {
+      return NextResponse.json({ error: "Email is required" }, { status: 400 });
+    }
+
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    // Always return success to prevent email enumeration
+    if (!user || !user.emailVerified) {
+      return NextResponse.json({ message: "If an account exists, a reset link has been sent." });
+    }
+
+    // Delete any existing reset tokens for this email
+    await prisma.passwordResetToken.deleteMany({ where: { identifier: email } });
+
+    const token = randomUUID();
+    const expires = new Date(Date.now() + 1000 * 60 * 60); // 1 hour
+
+    await prisma.passwordResetToken.create({
+      data: { identifier: email, token, expires },
+    });
+
+    try {
+      await sendPasswordResetEmail(email, token);
+    } catch (err) {
+      console.error("Failed to send reset email:", err);
+      return NextResponse.json(
+        { error: "Failed to send reset email. Please try again later." },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ message: "If an account exists, a reset link has been sent." });
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
+  }
+}

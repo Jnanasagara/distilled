@@ -1,7 +1,3 @@
-const nextConfig = {
-  experimental: {
-    instrumentationHook: true,
-  },
-};
+const nextConfig = {};
 
 export default nextConfig;

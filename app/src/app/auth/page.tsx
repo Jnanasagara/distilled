@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import ThemeToggle from "@/components/ThemeToggle";
 
 export default function AuthPage() {
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [mode, setMode] = useState<"login" | "signup" | "forgot">("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -14,6 +14,7 @@ export default function AuthPage() {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [checkEmail, setCheckEmail] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
   const router = useRouter();
 
   const searchParams = typeof window !== "undefined"
@@ -28,6 +29,26 @@ export default function AuthPage() {
     { label: "One uppercase letter", met: /[A-Z]/.test(password) },
     { label: "One special character", met: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password) },
   ] : [];
+
+  async function handleForgotPassword(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error); }
+      else { setForgotSent(true); }
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -63,7 +84,8 @@ export default function AuthPage() {
 
       const result = await signIn("credentials", { email, password, redirect: false });
       if (!result?.ok) { setError(result?.error ?? "Invalid email or password."); setLoading(false); return; }
-      router.push("/feed");
+      const session = await getSession();
+      router.push(session?.user?.role === "ADMIN" ? "/admin" : "/feed");
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -260,6 +282,14 @@ export default function AuthPage() {
         }
         .check-email-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--bg-accent); }
 
+        .auth-forgot-link {
+          background: none; border: none; color: var(--text-subtle);
+          font-family: inherit; font-size: 12px; font-weight: 500;
+          cursor: pointer; padding: 0; margin-top: 8px;
+          display: block; text-align: right; transition: color 0.2s;
+        }
+        .auth-forgot-link:hover { color: var(--primary); }
+
         .auth-footer { text-align: center; font-size: 13px; color: var(--text-subtle); margin-top: 20px; }
         .auth-footer-link {
           background: none; border: none;
@@ -309,6 +339,47 @@ export default function AuthPage() {
                   The link expires in 24 hours.
                 </p>
                 <button className="check-email-btn" onClick={() => { setCheckEmail(false); setMode("login"); }}>
+                  Back to Login
+                </button>
+              </>
+            ) : mode === "forgot" ? (
+              <>
+                {forgotSent ? (
+                  <>
+                    <div className="check-email-icon">✉️</div>
+                    <h2 className="check-email-title">Check your inbox</h2>
+                    <p className="check-email-text">
+                      If an account exists for <strong>{email}</strong>, we sent a password reset link. Check your inbox (and spam folder).
+                      <br /><br />
+                      The link expires in 1 hour.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h2 className="check-email-title" style={{ marginBottom: 8 }}>Forgot password?</h2>
+                    <p className="check-email-text" style={{ marginBottom: 20 }}>
+                      Enter your email and we&#39;ll send you a reset link.
+                    </p>
+                    <form onSubmit={handleForgotPassword}>
+                      <div className="auth-fields">
+                        <input
+                          className="auth-field"
+                          type="email"
+                          placeholder="Email address"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          required
+                          autoComplete="email"
+                        />
+                      </div>
+                      {error && <div className="auth-error">{error}</div>}
+                      <button type="submit" className="auth-submit" disabled={loading}>
+                        {loading ? <div className="auth-spinner" /> : <>Send reset link <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg></>}
+                      </button>
+                    </form>
+                  </>
+                )}
+                <button className="check-email-btn" style={{ marginTop: 16 }} onClick={() => { setMode("login"); setForgotSent(false); setError(""); }}>
                   Back to Login
                 </button>
               </>
@@ -397,6 +468,11 @@ export default function AuthPage() {
                         </div>
                       ))}
                     </div>
+                  )}
+                  {mode === "login" && (
+                    <button type="button" className="auth-forgot-link" onClick={() => { setMode("forgot"); setError(""); }}>
+                      Forgot password?
+                    </button>
                   )}
                 </div>
               </div>

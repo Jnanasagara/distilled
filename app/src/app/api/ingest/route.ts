@@ -11,8 +11,18 @@ function frequencyToTimeFilter(frequency: string): TimeFilter {
   }
 }
 
+function isAuthorized(req: Request): boolean {
+  const secret = process.env.INGEST_SECRET;
+  if (!secret) return false; // require secret to be configured
+  const auth = req.headers.get("x-ingest-secret");
+  return auth === secret;
+}
+
 // Manual trigger: POST /api/ingest
 export async function POST(req: Request) {
+  if (!isAuthorized(req)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   try {
     const body = await req.json().catch(() => ({}));
     const timeFilter = frequencyToTimeFilter(body.frequency ?? "DAILY");
@@ -24,8 +34,11 @@ export async function POST(req: Request) {
   }
 }
 
-// Scheduled trigger: GET /api/ingest
-export async function GET() {
+// Scheduled trigger: POST /api/ingest/schedule
+export async function GET(req: Request) {
+  if (!isAuthorized(req)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   try {
     await scheduleIngestion();
     return NextResponse.json({ success: true, message: "Ingestion scheduled" });

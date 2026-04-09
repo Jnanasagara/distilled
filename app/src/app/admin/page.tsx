@@ -1,12 +1,12 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { redirect } from "next/navigation";
-import FeedClient from "@/components/FeedClient";
+import AdminClient from "@/components/AdminClient";
 
-export default async function FeedPage() {
+export default async function AdminPage() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) redirect("/auth");
-  if (session.user.role === "ADMIN") redirect("/admin");
+  if (session.user.role !== "ADMIN") redirect("/feed");
 
-  return <FeedClient />;
+  return <AdminClient mustChangePassword={session.user.mustChangePassword ?? false} />;
 }

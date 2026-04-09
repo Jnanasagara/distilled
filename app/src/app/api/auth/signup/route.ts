@@ -3,6 +3,7 @@ import { promises as dns } from "dns";
 import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { sendVerificationEmail } from "@/lib/email";
+import { rateLimit, getIp, rateLimitedResponse } from "@/lib/rate-limit";
 import bcrypt from "bcrypt";
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
@@ -26,6 +27,10 @@ function validatePassword(password: string): string | null {
 }
 
 export async function POST(req: Request) {
+  // 5 signups per hour per IP
+  const { limited } = await rateLimit(`signup:${getIp(req)}`, 5, 3600);
+  if (limited) return rateLimitedResponse(3600);
+
   try {
     const { name, email, password } = await req.json();
 
@@ -55,7 +60,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "An account with this email already exists." }, { status: 400 });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12);
 
     await prisma.user.create({
       data: { name, email, password: hashedPassword },
@@ -69,7 +74,16 @@ export async function POST(req: Request) {
       data: { identifier: email, token, expires },
     });
 
-    await sendVerificationEmail(email, token);
+    try {
+      await sendVerificationEmail(email, token);
+    } catch (emailError) {
+      console.error("Email send failed:", emailError);
+      // Still return success since the account was created — user can try resending
+      return NextResponse.json({
+        message: "Account created, but we couldn't send the verification email. Please contact support or try again.",
+        emailFailed: true,
+      });
+    }
 
     return NextResponse.json({ message: "Check your email to verify your account." });
   } catch (error) {

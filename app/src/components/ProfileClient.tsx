@@ -22,6 +22,8 @@ type ProfileData = {
   weeklyTopicNames: string[];
 };
 
+type ChangePwForm = { currentPassword: string; newPassword: string; confirmPassword: string };
+
 function memberSince(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime();
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -37,6 +39,37 @@ export default function ProfileClient() {
   const [data, setData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [scrolled, setScrolled] = useState(false);
+  const [showChangePw, setShowChangePw] = useState(false);
+  const [pwForm, setPwForm] = useState<ChangePwForm>({ currentPassword: "", newPassword: "", confirmPassword: "" });
+  const [pwLoading, setPwLoading] = useState(false);
+  const [pwError, setPwError] = useState("");
+  const [pwSuccess, setPwSuccess] = useState("");
+  const [showPw, setShowPw] = useState(false);
+
+  const pwRules = [
+    { label: "At least 8 characters", met: pwForm.newPassword.length >= 8 },
+    { label: "One uppercase letter", met: /[A-Z]/.test(pwForm.newPassword) },
+    { label: "One special character", met: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(pwForm.newPassword) },
+  ];
+
+  async function handleChangePw(e: React.FormEvent) {
+    e.preventDefault();
+    setPwError(""); setPwSuccess("");
+    if (pwRules.some((r) => !r.met)) { setPwError("Please meet all password requirements."); return; }
+    if (pwForm.newPassword !== pwForm.confirmPassword) { setPwError("Passwords do not match."); return; }
+    setPwLoading(true);
+    try {
+      const res = await fetch("/api/user/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword }),
+      });
+      const d = await res.json();
+      if (!res.ok) { setPwError(d.error); }
+      else { setPwSuccess("Password changed successfully!"); setPwForm({ currentPassword: "", newPassword: "", confirmPassword: "" }); }
+    } catch { setPwError("Network error. Please try again."); }
+    finally { setPwLoading(false); }
+  }
 
   useEffect(() => {
     fetch("/api/profile")
@@ -149,6 +182,49 @@ export default function ProfileClient() {
         .topic-weight-val { font-size: 12px; color: var(--text-subtle); width: 32px; text-align: right; font-weight: 600; }
         .topic-paused-badge { font-size: 10px; color: var(--text-warning); font-weight: 600; background: var(--bg-warning); padding: 1px 6px; border-radius: 999px; }
 
+        /* Change password */
+        .prof-pw-toggle {
+          display: flex; align-items: center; gap: 8px;
+          padding: 9px 16px; border-radius: 10px;
+          border: 1.5px solid var(--border-default); background: var(--bg-card);
+          font-family: inherit; font-size: 13px; font-weight: 600;
+          color: var(--text-muted); cursor: pointer; transition: all 0.2s;
+        }
+        .prof-pw-toggle:hover { border-color: var(--primary); color: var(--primary); background: var(--bg-accent); }
+        .prof-pw-form { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; max-width: 400px; }
+        .prof-pw-field {
+          width: 100%; padding: 13px 16px;
+          border: 1.5px solid var(--border-default); border-radius: 12px;
+          font-family: inherit; font-size: 14px; color: var(--text-heading);
+          outline: none; transition: all 0.2s; background: var(--bg-input);
+        }
+        .prof-pw-field::placeholder { color: var(--text-subtle); }
+        .prof-pw-field:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+        .prof-pw-wrap { position: relative; }
+        .prof-pw-wrap .prof-pw-field { padding-right: 46px; }
+        .prof-pw-eye {
+          position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+          background: none; border: none; cursor: pointer; color: var(--text-subtle);
+          display: flex; align-items: center; padding: 0;
+        }
+        .prof-pw-eye:hover { color: var(--text-heading); }
+        .prof-pw-rules { display: flex; flex-direction: column; gap: 5px; margin-top: 6px; }
+        .prof-pw-rule { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-subtle); }
+        .prof-pw-rule.met { color: var(--text-success, #16a34a); }
+        .prof-pw-rule-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border-default); flex-shrink: 0; }
+        .prof-pw-rule.met .prof-pw-rule-dot { background: var(--text-success, #16a34a); }
+        .prof-pw-submit {
+          padding: 12px 22px; border: none; border-radius: 12px;
+          background: var(--btn-dark); color: var(--text-inverse);
+          font-family: inherit; font-size: 14px; font-weight: 700;
+          cursor: pointer; transition: all 0.2s; width: fit-content;
+        }
+        .prof-pw-submit:hover { background: var(--btn-dark-hover); }
+        .prof-pw-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+        .prof-pw-error { background: var(--bg-error); color: var(--text-error); font-size: 13px; font-weight: 500; padding: 10px 14px; border-radius: 10px; }
+        .prof-pw-success { background: #dcfce7; color: #16a34a; font-size: 13px; font-weight: 600; padding: 10px 14px; border-radius: 10px; }
+        .prof-pw-spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block; }
+
         /* Empty state */
         .prof-empty { text-align: center; padding: 40px 20px; color: var(--text-subtle); font-size: 14px; }
 
@@ -235,6 +311,87 @@ export default function ProfileClient() {
                 <div className="prof-stat-value">{data.stats.clicks}</div>
                 <div className="prof-stat-label">👆 Read</div>
               </div>
+            </div>
+
+            {/* Change Password */}
+            <div className="prof-card">
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: showChangePw ? 0 : 0 }}>
+                <div>
+                  <div className="prof-card-title">Security</div>
+                  <div className="prof-card-desc" style={{ marginBottom: 0 }}>Manage your account password.</div>
+                </div>
+                <button className="prof-pw-toggle" onClick={() => { setShowChangePw((v) => !v); setPwError(""); setPwSuccess(""); }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                  {showChangePw ? "Cancel" : "Change password"}
+                </button>
+              </div>
+
+              {showChangePw && (
+                <form className="prof-pw-form" onSubmit={handleChangePw}>
+                  <div className="prof-pw-wrap">
+                    <input
+                      className="prof-pw-field"
+                      type={showPw ? "text" : "password"}
+                      placeholder="Current password"
+                      value={pwForm.currentPassword}
+                      onChange={(e) => setPwForm((f) => ({ ...f, currentPassword: e.target.value }))}
+                      required
+                      autoComplete="current-password"
+                    />
+                    <button type="button" className="prof-pw-eye" onClick={() => setShowPw((v) => !v)}>
+                      {showPw ? (
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                          <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                          <line x1="1" y1="1" x2="23" y2="23" />
+                        </svg>
+                      ) : (
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                  <div>
+                    <input
+                      className="prof-pw-field"
+                      type={showPw ? "text" : "password"}
+                      placeholder="New password"
+                      value={pwForm.newPassword}
+                      onChange={(e) => setPwForm((f) => ({ ...f, newPassword: e.target.value }))}
+                      required
+                      autoComplete="new-password"
+                    />
+                    {pwForm.newPassword.length > 0 && (
+                      <div className="prof-pw-rules">
+                        {pwRules.map((r) => (
+                          <div key={r.label} className={`prof-pw-rule ${r.met ? "met" : ""}`}>
+                            <span className="prof-pw-rule-dot" />{r.label}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    className="prof-pw-field"
+                    type={showPw ? "text" : "password"}
+                    placeholder="Confirm new password"
+                    value={pwForm.confirmPassword}
+                    onChange={(e) => setPwForm((f) => ({ ...f, confirmPassword: e.target.value }))}
+                    required
+                    autoComplete="new-password"
+                  />
+                  {pwError && <div className="prof-pw-error">{pwError}</div>}
+                  {pwSuccess && <div className="prof-pw-success">{pwSuccess}</div>}
+                  <button type="submit" className="prof-pw-submit" disabled={pwLoading}>
+                    {pwLoading ? <span className="prof-pw-spinner" /> : "Update password"}
+                  </button>
+                </form>
+              )}
             </div>
 
             {/* Topic interest bar chart */}

@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     const userId = session.user.id;
     const { contentId, type } = await req.json();
 
-    if (!contentId || !["LIKE", "CLICK", "SAVE"].includes(type)) {
+    if (!contentId || typeof contentId !== "string" || !["LIKE", "CLICK", "SAVE"].includes(type)) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
 
@@ -73,6 +73,10 @@ export async function DELETE(req: Request) {
 
     const userId = session.user.id;
     const { contentId, type } = await req.json();
+
+    if (!contentId || typeof contentId !== "string" || !["LIKE", "CLICK", "SAVE"].includes(type)) {
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+    }
 
     await prisma.interaction.deleteMany({
       where: { userId, contentId, type },
