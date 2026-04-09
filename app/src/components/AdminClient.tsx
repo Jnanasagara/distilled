@@ -21,6 +21,9 @@ type ChangePwForm = { currentPassword: string; newPassword: string; confirmPassw
 export default function AdminClient({ mustChangePassword }: { mustChangePassword: boolean }) {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const PAGE_SIZE = 50;
   const [scrolled, setScrolled] = useState(false);
   const [search, setSearch] = useState("");
   const [banningId, setBanningId] = useState<string | null>(null);
@@ -42,11 +45,12 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
   ];
 
   useEffect(() => {
-    fetch("/api/admin/users")
+    setLoading(true);
+    fetch(`/api/admin/users?page=${page}`)
       .then((r) => r.json())
-      .then((d) => { setUsers(d.users ?? []); setLoading(false); })
+      .then((d) => { setUsers(d.users ?? []); setTotal(d.total ?? 0); setLoading(false); })
       .catch(() => setLoading(false));
-  }, []);
+  }, [page]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -269,6 +273,10 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
         .adm-action-cell { display: flex; align-items: center; gap: 6px; }
         .adm-error { background: var(--bg-error); color: var(--text-error); font-size: 13px; padding: 10px 14px; border-radius: 10px; margin-bottom: 12px; }
         .adm-empty { text-align: center; padding: 40px; color: var(--text-subtle); font-size: 14px; }
+        .adm-pagination { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 16px; font-size: 13px; color: var(--text-subtle); }
+        .adm-page-btn { padding: 6px 12px; border-radius: 8px; border: 1.5px solid var(--border-default); background: var(--bg-card); font-family: inherit; font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
+        .adm-page-btn:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+        .adm-page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
         /* Shimmer */
         .shimmer {
@@ -410,7 +418,7 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
             />
           </div>
 
-          {banError && <div className="adm-error">{banError}</div>}
+          {banError && <div className="adm-error" style={{marginBottom: 12}}>{banError}</div>}
 
           {loading ? (
             <div className="adm-empty">Loading users...</div>
@@ -504,6 +512,14 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {total > PAGE_SIZE && (
+            <div className="adm-pagination">
+              <span>{(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} of {total}</span>
+              <button className="adm-page-btn" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>← Prev</button>
+              <button className="adm-page-btn" disabled={page * PAGE_SIZE >= total} onClick={() => setPage((p) => p + 1)}>Next →</button>
             </div>
           )}
         </div>

@@ -3,7 +3,7 @@ import { promises as dns } from "dns";
 import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { sendVerificationEmail } from "@/lib/email";
-import { rateLimit, getIp, rateLimitedResponse } from "@/lib/rate-limit";
+import { rateLimit, getIp, rateLimitedResponse, parseJsonBody, validateOrigin } from "@/lib/rate-limit";
 import bcrypt from "bcrypt";
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
@@ -28,11 +28,14 @@ function validatePassword(password: string): string | null {
 
 export async function POST(req: Request) {
   // 5 signups per hour per IP
+  if (!validateOrigin(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const { limited } = await rateLimit(`signup:${getIp(req)}`, 5, 3600);
   if (limited) return rateLimitedResponse(3600);
 
   try {
-    const { name, email, password } = await req.json();
+    const parsed = await parseJsonBody(req);
+    if ("error" in parsed) return parsed.error;
+    const { name, email, password } = parsed.data;
 
     if (!email || !password) {
       return NextResponse.json({ error: "Email and password required" }, { status: 400 });

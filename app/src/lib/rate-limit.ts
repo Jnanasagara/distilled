@@ -24,8 +24,8 @@ export async function rateLimit(
     }
     return { limited: count > limit, remaining: Math.max(0, limit - count) };
   } catch {
-    // Redis unavailable — fail open (don't block the request)
-    return { limited: false, remaining: limit };
+    // Redis unavailable — fail closed on sensitive endpoints to prevent brute force
+    return { limited: true, remaining: 0 };
   }
 }
 
@@ -44,4 +44,39 @@ export function rateLimitedResponse(windowSeconds: number): NextResponse {
       headers: { "Retry-After": String(windowSeconds) },
     }
   );
+}
+
+/** Max request body size in bytes (1MB). */
+const MAX_BODY_SIZE = 1024 * 1024;
+
+/**
+ * Parse JSON body with size limit and Content-Type check.
+ * Returns parsed body or a NextResponse error.
+ */
+export async function parseJsonBody(req: Request): Promise<{ data: any } | { error: NextResponse }> {
+  const contentLength = req.headers.get("content-length");
+  if (contentLength && parseInt(contentLength) > MAX_BODY_SIZE) {
+    return { error: NextResponse.json({ error: "Request too large" }, { status: 413 }) };
+  }
+  try {
+    const text = await req.text();
+    if (text.length > MAX_BODY_SIZE) {
+      return { error: NextResponse.json({ error: "Request too large" }, { status: 413 }) };
+    }
+    return { data: JSON.parse(text) };
+  } catch {
+    return { error: NextResponse.json({ error: "Invalid JSON" }, { status: 400 }) };
+  }
+}
+
+/**
+ * Validate that the request Origin matches the app's expected origin (CSRF protection).
+ * Only enforced in production.
+ */
+export function validateOrigin(req: Request): boolean {
+  if (process.env.NODE_ENV !== "production") return true;
+  const origin = req.headers.get("origin");
+  const expected = process.env.NEXTAUTH_URL;
+  if (!origin || !expected) return true;
+  return origin === expected || origin === expected.replace(/\/$/, "");
 }

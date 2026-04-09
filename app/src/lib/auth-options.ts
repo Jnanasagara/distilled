@@ -48,15 +48,32 @@ export const authOptions: NextAuthOptions = {
     },
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id;
         token.role = (user as any).role;
         token.mustChangePassword = (user as any).mustChangePassword;
       }
+      // Re-fetch user on every session check to catch bans and role changes
+      if (token.id && trigger !== "signIn") {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { isBanned: true, role: true, mustChangePassword: true },
+        });
+        if (!dbUser || dbUser.isBanned) {
+          // Invalidate token for banned/deleted users
+          return { ...token, banned: true };
+        }
+        token.role = dbUser.role;
+        token.mustChangePassword = dbUser.mustChangePassword;
+      }
       return token;
     },
     async session({ session, token }) {
+      if ((token as any).banned) {
+        // Return empty session to force logout
+        return { ...session, user: undefined as any };
+      }
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;

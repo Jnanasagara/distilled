@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
 import { redis } from "@/lib/redis";
+import { parseJsonBody, validateOrigin } from "@/lib/rate-limit";
 
 const WEIGHT_DELTA: Record<string, number> = {
   LIKE:  0.15,
@@ -18,7 +19,10 @@ export async function POST(req: Request) {
     }
 
     const userId = session.user.id;
-    const { contentId, type } = await req.json();
+    if (!validateOrigin(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    const parsed = await parseJsonBody(req);
+    if ("error" in parsed) return parsed.error;
+    const { contentId, type } = parsed.data;
 
     if (!contentId || typeof contentId !== "string" || !["LIKE", "CLICK", "SAVE"].includes(type)) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
@@ -72,7 +76,10 @@ export async function DELETE(req: Request) {
     }
 
     const userId = session.user.id;
-    const { contentId, type } = await req.json();
+    if (!validateOrigin(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    const parsed2 = await parseJsonBody(req);
+    if ("error" in parsed2) return parsed2.error;
+    const { contentId, type } = parsed2.data;
 
     if (!contentId || typeof contentId !== "string" || !["LIKE", "CLICK", "SAVE"].includes(type)) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });

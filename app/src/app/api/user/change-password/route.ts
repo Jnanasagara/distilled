@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
-import { rateLimit, getIp, rateLimitedResponse } from "@/lib/rate-limit";
+import { rateLimit, getIp, rateLimitedResponse, parseJsonBody, validateOrigin } from "@/lib/rate-limit";
 import bcrypt from "bcrypt";
 
 function validatePassword(password: string): string | null {
@@ -14,6 +14,7 @@ function validatePassword(password: string): string | null {
 }
 
 export async function POST(req: Request) {
+  if (!validateOrigin(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   // 5 attempts per 15 minutes per IP — prevents password guessing
   const { limited } = await rateLimit(`changepw:${getIp(req)}`, 5, 900);
   if (limited) return rateLimitedResponse(900);
@@ -24,7 +25,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { currentPassword, newPassword } = await req.json();
+    const parsed = await parseJsonBody(req);
+    if ("error" in parsed) return parsed.error;
+    const { currentPassword, newPassword } = parsed.data;
 
     if (!currentPassword || !newPassword) {
       return NextResponse.json({ error: "Current and new password are required" }, { status: 400 });

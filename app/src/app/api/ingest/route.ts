@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { ingestAllTopics } from "@/lib/ingest";
 import { scheduleIngestion } from "@/lib/queue";
 import { TimeFilter } from "@/lib/fetchers";
+import { rateLimit, getIp, rateLimitedResponse } from "@/lib/rate-limit";
 
 function frequencyToTimeFilter(frequency: string): TimeFilter {
   switch (frequency) {
@@ -23,6 +24,8 @@ export async function POST(req: Request) {
   if (!isAuthorized(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const { limited } = await rateLimit(`ingest:${getIp(req)}`, 10, 60);
+  if (limited) return rateLimitedResponse(60);
   try {
     const body = await req.json().catch(() => ({}));
     const timeFilter = frequencyToTimeFilter(body.frequency ?? "DAILY");
