@@ -25,6 +25,8 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
   const [search, setSearch] = useState("");
   const [banningId, setBanningId] = useState<string | null>(null);
   const [banError, setBanError] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const [showChangePw, setShowChangePw] = useState(mustChangePassword);
   const [pwForm, setPwForm] = useState<ChangePwForm>({ currentPassword: "", newPassword: "", confirmPassword: "" });
@@ -79,6 +81,25 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
       setBanError("Network error. Please try again.");
     } finally {
       setBanningId(null);
+    }
+  }
+
+  async function handleDelete(userId: string) {
+    setDeletingId(userId);
+    setBanError("");
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/delete`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) {
+        setBanError(data.error);
+      } else {
+        setUsers((prev) => prev.filter((u) => u.id !== userId));
+      }
+    } catch {
+      setBanError("Network error. Please try again.");
+    } finally {
+      setDeletingId(null);
+      setDeleteConfirmId(null);
     }
   }
 
@@ -235,6 +256,17 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
         .adm-ban-btn.unban:hover { background: #dcfce7; }
         .adm-ban-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+        .adm-delete-btn {
+          padding: 6px 14px; border-radius: 8px; border: 1.5px solid #fca5a5;
+          font-family: inherit; font-size: 12px; font-weight: 600;
+          cursor: pointer; transition: all 0.15s ease; white-space: nowrap;
+          color: #dc2626; background: transparent;
+        }
+        .adm-delete-btn:hover { background: #fee2e2; }
+        .adm-delete-btn.confirm { border-color: #dc2626; background: #dc2626; color: white; }
+        .adm-delete-btn.confirm:hover { background: #b91c1c; }
+        .adm-delete-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .adm-action-cell { display: flex; align-items: center; gap: 6px; }
         .adm-error { background: var(--bg-error); color: var(--text-error); font-size: 13px; padding: 10px 14px; border-radius: 10px; margin-bottom: 12px; }
         .adm-empty { text-align: center; padding: 40px; color: var(--text-subtle); font-size: 14px; }
 
@@ -431,13 +463,39 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
                       </td>
                       <td>
                         {user.role !== "ADMIN" ? (
-                          <button
-                            className={`adm-ban-btn ${user.isBanned ? "unban" : "ban"}`}
-                            disabled={banningId === user.id}
-                            onClick={() => handleBan(user.id)}
-                          >
-                            {banningId === user.id ? "..." : user.isBanned ? "Unban" : "Ban"}
-                          </button>
+                          <div className="adm-action-cell">
+                            <button
+                              className={`adm-ban-btn ${user.isBanned ? "unban" : "ban"}`}
+                              disabled={banningId === user.id}
+                              onClick={() => handleBan(user.id)}
+                            >
+                              {banningId === user.id ? "..." : user.isBanned ? "Unban" : "Ban"}
+                            </button>
+                            {deleteConfirmId === user.id ? (
+                              <>
+                                <button
+                                  className="adm-delete-btn confirm"
+                                  disabled={deletingId === user.id}
+                                  onClick={() => handleDelete(user.id)}
+                                >
+                                  {deletingId === user.id ? "..." : "Confirm"}
+                                </button>
+                                <button
+                                  className="adm-delete-btn"
+                                  onClick={() => setDeleteConfirmId(null)}
+                                >
+                                  Cancel
+                                </button>
+                              </>
+                            ) : (
+                              <button
+                                className="adm-delete-btn"
+                                onClick={() => setDeleteConfirmId(user.id)}
+                              >
+                                Delete
+                              </button>
+                            )}
+                          </div>
                         ) : (
                           <span style={{ fontSize: 12, color: "var(--text-subtle)" }}>—</span>
                         )}
