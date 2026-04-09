@@ -11,19 +11,21 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const token = searchParams.get("token");
 
+    const base = process.env.NEXTAUTH_URL ?? new URL(req.url).origin;
+
     if (!token) {
-      return NextResponse.redirect(new URL("/auth?error=missing-token", req.url));
+      return NextResponse.redirect(new URL("/auth?error=missing-token", base));
     }
 
     const record = await prisma.verificationToken.findUnique({ where: { token } });
 
     if (!record) {
-      return NextResponse.redirect(new URL("/auth?error=invalid-token", req.url));
+      return NextResponse.redirect(new URL("/auth?error=invalid-token", base));
     }
 
     if (record.expires < new Date()) {
       await prisma.verificationToken.delete({ where: { token } });
-      return NextResponse.redirect(new URL("/auth?error=expired-token", req.url));
+      return NextResponse.redirect(new URL("/auth?error=expired-token", base));
     }
 
     // Mark email as verified and clean up the token atomically
@@ -35,9 +37,10 @@ export async function GET(req: Request) {
       prisma.verificationToken.delete({ where: { token } }),
     ]);
 
-    return NextResponse.redirect(new URL("/auth?verified=1", req.url));
+    return NextResponse.redirect(new URL("/auth?verified=1", base));
   } catch (error) {
     console.error("Email verification error:", error);
-    return NextResponse.redirect(new URL("/auth?error=invalid-token", req.url));
+    const base = process.env.NEXTAUTH_URL ?? new URL(req.url).origin;
+    return NextResponse.redirect(new URL("/auth?error=invalid-token", base));
   }
 }
