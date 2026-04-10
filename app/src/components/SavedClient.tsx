@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
-import ThemeToggle from "./ThemeToggle";
+import NavBar from "./NavBar";
 
 type Article = {
   id: string;
@@ -198,11 +196,8 @@ function SavedCard({
 }
 
 export default function SavedClient() {
-  const router = useRouter();
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
-  const [scrolled, setScrolled] = useState(false);
-
   useEffect(() => {
     fetch("/api/saved")
       .then((r) => r.json())
@@ -211,12 +206,6 @@ export default function SavedClient() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   async function unsave(articleId: string) {
@@ -235,46 +224,6 @@ export default function SavedClient() {
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: var(--bg-page); font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-font-smoothing: antialiased; transition: background 0.3s ease; }
-
-        /* Navbar */
-        .saved-navbar {
-          position: sticky; top: 0; z-index: 100;
-          background: var(--bg-navbar);
-          backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-          border-bottom: 1px solid transparent;
-          transition: all 0.3s ease;
-        }
-        .saved-navbar.scrolled { border-bottom-color: var(--border-default); box-shadow: var(--shadow-navbar); }
-        .saved-navbar-inner {
-          max-width: 1200px; margin: 0 auto; padding: 16px 24px;
-          display: flex; justify-content: space-between; align-items: center;
-        }
-        .saved-brand { display: flex; align-items: center; gap: 10px; }
-        .saved-brand-icon {
-          width: 36px; height: 36px; border-radius: 10px;
-          background: linear-gradient(135deg, var(--gradient-brand-start), var(--gradient-brand-end));
-          display: flex; align-items: center; justify-content: center;
-          color: white; font-weight: 800; font-size: 16px;
-        }
-        .saved-brand-name { font-size: 22px; font-weight: 800; color: var(--text-heading); letter-spacing: -0.5px; }
-        .saved-nav-right { display: flex; align-items: center; gap: 8px; }
-        .saved-back-btn {
-          display: flex; align-items: center; gap: 6px;
-          padding: 8px 16px; border-radius: 10px;
-          border: 1.5px solid var(--border-default); background: var(--bg-card);
-          font-family: inherit; font-size: 13px; font-weight: 600;
-          color: var(--text-muted); cursor: pointer; transition: all 0.2s ease;
-        }
-        .saved-back-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--bg-accent); }
-
-        /* Theme toggle */
-        .theme-toggle-btn {
-          width: 38px; height: 38px; border-radius: 10px;
-          border: 1.5px solid var(--border-default); background: var(--bg-card);
-          display: flex; align-items: center; justify-content: center;
-          cursor: pointer; color: var(--text-muted); transition: all 0.2s ease;
-        }
-        .theme-toggle-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--bg-accent); }
 
         /* Main */
         .saved-container { max-width: 1200px; margin: 0 auto; padding: 24px 24px 80px; }
@@ -401,38 +350,12 @@ export default function SavedClient() {
         .saved-empty-text { font-size: 14px; color: var(--text-subtle); line-height: 1.6; margin: 0; }
 
         @media (max-width: 640px) {
-          .saved-navbar-inner { padding: 12px 16px; }
-          .saved-brand-name { font-size: 18px; }
           .saved-container { padding: 16px 16px 60px; }
           .saved-heading { font-size: 22px; }
         }
       `}</style>
 
-      <nav className={`saved-navbar ${scrolled ? "scrolled" : ""}`}>
-        <div className="saved-navbar-inner">
-          <div className="saved-brand">
-            <div className="saved-brand-icon">D</div>
-            <span className="saved-brand-name">Distilled</span>
-          </div>
-          <div className="saved-nav-right">
-            <ThemeToggle />
-            <button className="saved-back-btn" onClick={() => router.push("/feed")}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M19 12H5M12 19l-7-7 7-7" />
-              </svg>
-              Back to Feed
-            </button>
-            <button className="saved-back-btn" onClick={() => signOut({ callbackUrl: `${window.location.origin}/auth` })} title="Logout">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" y1="12" x2="9" y2="12" />
-              </svg>
-              Logout
-            </button>
-          </div>
-        </div>
-      </nav>
+      <NavBar currentPage="saved" />
 
       <div className="saved-container">
         {loading ? (

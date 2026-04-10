@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
-import ThemeToggle from "./ThemeToggle";
+import NavBar from "./NavBar";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   LineChart, Line, Legend, CartesianGrid,
@@ -35,10 +33,8 @@ function memberSince(dateStr: string) {
 }
 
 export default function ProfileClient() {
-  const router = useRouter();
   const [data, setData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [scrolled, setScrolled] = useState(false);
   const [showChangePw, setShowChangePw] = useState(false);
   const [pwForm, setPwForm] = useState<ChangePwForm>({ currentPassword: "", newPassword: "", confirmPassword: "" });
   const [pwLoading, setPwLoading] = useState(false);
@@ -102,12 +98,6 @@ export default function ProfileClient() {
       .catch(() => setLoading(false));
   }, []);
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   return (
     <>
       <style>{`
@@ -115,39 +105,6 @@ export default function ProfileClient() {
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: var(--bg-page); font-family: 'Inter', -apple-system, sans-serif; -webkit-font-smoothing: antialiased; transition: background 0.3s ease; }
 
-        .prof-navbar {
-          position: sticky; top: 0; z-index: 100;
-          background: var(--bg-navbar);
-          backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-          border-bottom: 1px solid transparent; transition: all 0.3s ease;
-        }
-        .prof-navbar.scrolled { border-bottom-color: var(--border-default); box-shadow: var(--shadow-navbar); }
-        .prof-navbar-inner {
-          max-width: 900px; margin: 0 auto; padding: 16px 24px;
-          display: flex; justify-content: space-between; align-items: center;
-        }
-        .prof-brand { display: flex; align-items: center; gap: 10px; }
-        .prof-brand-icon {
-          width: 36px; height: 36px; border-radius: 10px;
-          background: linear-gradient(135deg, var(--gradient-brand-start), var(--gradient-brand-end));
-          display: flex; align-items: center; justify-content: center;
-          color: white; font-weight: 800; font-size: 16px;
-        }
-        .prof-brand-name { font-size: 22px; font-weight: 800; color: var(--text-heading); letter-spacing: -0.5px; }
-        .prof-nav-right { display: flex; align-items: center; gap: 8px; }
-        .prof-back-btn {
-          display: flex; align-items: center; gap: 6px;
-          padding: 8px 16px; border-radius: 10px;
-          border: 1.5px solid var(--border-default); background: var(--bg-card);
-          font-family: inherit; font-size: 13px; font-weight: 600;
-          color: var(--text-muted); cursor: pointer; transition: all 0.2s ease;
-        }
-        .prof-back-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--bg-accent); }
-        @media (max-width: 640px) {
-          .prof-back-btn span { display: none; }
-          .prof-back-btn { padding: 8px 10px; }
-          .prof-brand-name { font-size: 18px; }
-        }
         .theme-toggle-btn {
           width: 38px; height: 38px; border-radius: 10px;
           border: 1.5px solid var(--border-default); background: var(--bg-card);
@@ -293,36 +250,11 @@ export default function ProfileClient() {
         @media (max-width: 640px) {
           .prof-hero { flex-direction: column; text-align: center; }
           .prof-stats { grid-template-columns: 1fr; }
-          .prof-navbar-inner { padding: 12px 16px; }
           .prof-container { padding: 20px 16px 60px; }
         }
       `}</style>
 
-      <nav className={`prof-navbar ${scrolled ? "scrolled" : ""}`}>
-        <div className="prof-navbar-inner">
-          <div className="prof-brand">
-            <div className="prof-brand-icon">D</div>
-            <span className="prof-brand-name">Distilled</span>
-          </div>
-          <div className="prof-nav-right">
-            <ThemeToggle />
-            <button className="prof-back-btn" onClick={() => router.push("/feed")}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M19 12H5M12 19l-7-7 7-7" />
-              </svg>
-              Back to Feed
-            </button>
-            <button className="prof-back-btn" onClick={() => signOut({ callbackUrl: `${window.location.origin}/auth` })} title="Logout">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" y1="12" x2="9" y2="12" />
-              </svg>
-              Logout
-            </button>
-          </div>
-        </div>
-      </nav>
+      <NavBar currentPage="profile" />
 
       <div className="prof-container">
         {loading ? (

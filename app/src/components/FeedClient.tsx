@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { useSession, signOut } from "next-auth/react";
-import ThemeToggle from "./ThemeToggle";
+import { useSession } from "next-auth/react";
+import NavBar from "./NavBar";
 
 type Article = {
   id: string;
@@ -312,13 +311,11 @@ function ArticleCard({
 const PAGE_SIZE = 10;
 
 export default function FeedClient() {
-  const router = useRouter();
   const { data: session } = useSession();
   const [feed, setFeed] = useState<FeedData | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
   const [page, setPage] = useState(1);
-  const [scrolled, setScrolled] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeName, setWelcomeName] = useState("");
 
@@ -330,12 +327,6 @@ export default function FeedClient() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   useEffect(() => {
@@ -434,57 +425,6 @@ export default function FeedClient() {
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: var(--bg-page); font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-font-smoothing: antialiased; transition: background 0.3s ease; }
-
-        /* ===== HEADER ===== */
-        .feed-navbar {
-          position: sticky; top: 0; z-index: 100;
-          background: var(--bg-navbar);
-          backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-          border-bottom: 1px solid transparent;
-          transition: all 0.3s ease;
-        }
-        .feed-navbar.scrolled {
-          border-bottom-color: var(--border-default);
-          box-shadow: var(--shadow-navbar);
-        }
-        .navbar-inner {
-          max-width: 1200px; margin: 0 auto;
-          padding: 16px 24px;
-          display: flex; justify-content: space-between; align-items: center;
-        }
-        .brand { display: flex; align-items: center; gap: 10px; }
-        .brand-icon {
-          width: 36px; height: 36px; border-radius: 10px;
-          background: linear-gradient(135deg, var(--gradient-brand-start), var(--gradient-brand-end));
-          display: flex; align-items: center; justify-content: center;
-          color: white; font-weight: 800; font-size: 16px;
-        }
-        .brand-name {
-          font-size: 22px; font-weight: 800; color: var(--text-heading);
-          letter-spacing: -0.5px;
-        }
-        .nav-actions { display: flex; gap: 8px; align-items: center; }
-        .nav-btn {
-          display: flex; align-items: center; gap: 6px;
-          padding: 8px 16px; border-radius: 10px;
-          border: 1.5px solid var(--border-default); background: var(--bg-card);
-          font-family: inherit; font-size: 13px; font-weight: 600;
-          color: var(--text-muted); cursor: pointer;
-          transition: all 0.2s ease;
-        }
-        .nav-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--bg-accent); }
-        .nav-btn.primary { background: var(--primary); border-color: var(--primary); color: var(--text-inverse); }
-        .nav-btn.primary:hover { background: var(--primary-hover); }
-
-        /* Theme toggle */
-        .theme-toggle-btn {
-          width: 38px; height: 38px; border-radius: 10px;
-          border: 1.5px solid var(--border-default); background: var(--bg-card);
-          display: flex; align-items: center; justify-content: center;
-          cursor: pointer; color: var(--text-muted);
-          transition: all 0.2s ease;
-        }
-        .theme-toggle-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--bg-accent); }
 
         /* ===== MAIN LAYOUT ===== */
         .feed-container { max-width: 1200px; margin: 0 auto; padding: 24px 24px 80px; }
@@ -697,10 +637,6 @@ export default function FeedClient() {
 
         /* ===== RESPONSIVE ===== */
         @media (max-width: 640px) {
-          .navbar-inner { padding: 12px 16px; }
-          .brand-name { font-size: 18px; }
-          .nav-btn span { display: none; }
-          .nav-btn { padding: 8px 12px; }
           .feed-container { padding: 16px 16px 60px; }
           .feed-greeting { font-size: 22px; }
           .card-title { font-size: 15px; }
@@ -758,45 +694,7 @@ export default function FeedClient() {
         </div>
       )}
 
-      <nav className={`feed-navbar ${scrolled ? "scrolled" : ""}`}>
-        <div className="navbar-inner">
-          <div className="brand">
-            <div className="brand-icon">D</div>
-            <span className="brand-name">Distilled</span>
-          </div>
-          <div className="nav-actions">
-            <ThemeToggle />
-            <button className="nav-btn" onClick={() => router.push("/saved")}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-              </svg>
-              <span>Saved</span>
-            </button>
-            <button className="nav-btn" onClick={() => router.push("/profile")}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-              <span>Profile</span>
-            </button>
-            <button className="nav-btn primary" onClick={() => router.push("/preferences")}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="3" />
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-              </svg>
-              <span>Preferences</span>
-            </button>
-            <button className="nav-btn" onClick={() => signOut({ callbackUrl: `${window.location.origin}/auth` })} title="Logout">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" y1="12" x2="9" y2="12" />
-              </svg>
-              <span>Logout</span>
-            </button>
-          </div>
-        </div>
-      </nav>
+      <NavBar currentPage="feed" />
 
       <div className="feed-container">
         {loading ? (
