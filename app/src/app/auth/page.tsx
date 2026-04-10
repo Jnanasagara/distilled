@@ -85,7 +85,13 @@ export default function AuthPage() {
       const result = await signIn("credentials", { email, password, redirect: false });
       if (!result?.ok) { setError(result?.error ?? "Invalid email or password."); setLoading(false); return; }
       const session = await getSession();
-      router.push(session?.user?.role === "ADMIN" ? "/admin" : "/feed");
+      if (session?.user?.role === "ADMIN") {
+        router.push("/admin");
+      } else if (!session?.user?.onboarded) {
+        router.push("/onboarding");
+      } else {
+        router.push("/feed");
+      }
     } catch {
       setError("Network error. Please try again.");
     } finally {

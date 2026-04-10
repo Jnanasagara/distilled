@@ -9,6 +9,7 @@ declare module "next-auth" {
       image?: string | null;
       role?: string;
       mustChangePassword?: boolean;
+      onboarded?: boolean;
     };
   }
 }

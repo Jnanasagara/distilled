@@ -26,6 +26,7 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           role: user.role,
           mustChangePassword: user.mustChangePassword,
+          onboarded: user.onboarded,
         };
       },
     }),
@@ -53,12 +54,13 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.role = (user as any).role;
         token.mustChangePassword = (user as any).mustChangePassword;
+        token.onboarded = (user as any).onboarded;
       }
       // Re-fetch user on every session check to catch bans and role changes
       if (token.id && trigger !== "signIn") {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { isBanned: true, role: true, mustChangePassword: true },
+          select: { isBanned: true, role: true, mustChangePassword: true, onboarded: true },
         });
         if (!dbUser || dbUser.isBanned) {
           // Invalidate token for banned/deleted users
@@ -66,6 +68,7 @@ export const authOptions: NextAuthOptions = {
         }
         token.role = dbUser.role;
         token.mustChangePassword = dbUser.mustChangePassword;
+        token.onboarded = dbUser.onboarded;
       }
       return token;
     },
@@ -78,6 +81,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
         session.user.mustChangePassword = token.mustChangePassword as boolean;
+        session.user.onboarded = token.onboarded as boolean;
       }
       return session;
     },
