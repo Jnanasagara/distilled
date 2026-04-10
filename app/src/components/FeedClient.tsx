@@ -10,6 +10,7 @@ type Article = {
   url: string;
   sourceUrl: string | null;
   summary: string | null;
+  impact: string | null;
   imageUrl: string | null;
   source: string;
   author: string | null;
@@ -200,6 +201,12 @@ function ArticleCard({
         <h3 className="card-title">{article.title}</h3>
         {article.summary && (
           <p className="card-summary">{article.summary}</p>
+        )}
+        {article.impact && (
+          <div className="card-impact">
+            <span className="impact-label">💡 How this affects you</span>
+            <p className="impact-text">{article.impact}</p>
+          </div>
         )}
 
         {showReason && article._reason && (
@@ -525,6 +532,14 @@ export default function FeedClient() {
           -webkit-box-orient: vertical; overflow: hidden;
           margin: 0 0 12px;
         }
+        .card-impact {
+          background: var(--bg-accent); border-left: 3px solid #f59e0b;
+          border-radius: 0 8px 8px 0;
+          padding: 10px 12px; margin-bottom: 12px;
+          display: flex; flex-direction: column; gap: 3px;
+        }
+        .impact-label { font-size: 10px; font-weight: 700; color: #d97706; text-transform: uppercase; letter-spacing: 0.06em; }
+        .impact-text { font-size: 12.5px; color: var(--text-body); line-height: 1.4; margin: 0; }
         .card-reason {
           background: var(--bg-accent); border-left: 3px solid var(--primary);
           border-radius: 0 8px 8px 0;

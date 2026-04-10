@@ -136,6 +136,7 @@ model Content {
   url         String   @unique
   sourceUrl   String?
   summary     String?
+  impact      String?
   imageUrl    String?
   source      String   // "reddit" | "hackernews" | "devto" | "rss"
   topicId     String?

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { fetchContentForTopic, FetchedItem, TimeFilter } from "@/lib/fetchers";
+import { summarizeContent } from "@/lib/summarize";
 
 export async function ingestContentForTopic(
   topicId: string,
@@ -12,15 +13,15 @@ export async function ingestContentForTopic(
 
   for (const item of items) {
     try {
-      await prisma.content.upsert({
+      const result = await prisma.content.upsert({
         where: { url: item.url },
         update: {
-          sourceUrl: item.sourceUrl ?? null,  // update sourceUrl if re-ingested
+          sourceUrl: item.sourceUrl ?? null,
         },
         create: {
           title: item.title,
           url: item.url,
-          sourceUrl: item.sourceUrl ?? null,  // ← new
+          sourceUrl: item.sourceUrl ?? null,
           source: item.source,
           author: item.author,
           publishedAt: item.publishedAt,
@@ -28,6 +29,20 @@ export async function ingestContentForTopic(
           topicId,
         },
       });
+
+      // Summarize if this article has no summary yet (new articles + backfill).
+      // 4-second delay keeps us well under the free-tier 15 RPM limit.
+      if (!result.summary) {
+        await new Promise((r) => setTimeout(r, 4000));
+        const ai = await summarizeContent(item.title, item.url);
+        if (ai) {
+          await prisma.content.update({
+            where: { id: result.id },
+            data: { summary: ai.summary, impact: ai.impact },
+          });
+        }
+      }
+
       saved++;
     } catch {
       // skip duplicates or bad URLs
