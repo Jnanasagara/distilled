@@ -70,7 +70,7 @@ export default async function Home() {
           fontSize: "clamp(16px, 2vw, 20px)", color: "rgba(255,255,255,0.6)",
           maxWidth: 560, margin: "0 auto 40px", lineHeight: 1.7,
         }}>
-          Distilled curates articles from Reddit, Hacker News, Dev.to, and RSS — ranked by what you actually care about. No noise, no algorithms you can't control.
+          Distilled curates articles from Reddit, Hacker News, Dev.to, and RSS, ranked by what you actually care about. No noise, no algorithms you can't control.
         </p>
 
         <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
@@ -137,9 +137,9 @@ export default async function Home() {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
           {[
             { icon: "🎯", title: "Personalized feed", desc: "Pick your topics. The algorithm learns what you engage with and surfaces more of it over time." },
-            { icon: "🤖", title: "AI summaries", desc: "Every article comes with a 2-3 sentence summary and a 'how this affects you' insight — powered by Gemini." },
+            { icon: "🤖", title: "AI summaries", desc: "Every article comes with a 2-3 sentence summary and a 'how this affects you' insight, powered by Gemini." },
             { icon: "📬", title: "Email digests", desc: "Get your top articles delivered daily, weekly, or monthly. Read on your own schedule." },
-            { icon: "🔍", title: "Multi-source", desc: "Reddit, Hacker News, Dev.to, and RSS feeds — all in one place, deduplicated and ranked." },
+            { icon: "🔍", title: "Multi-source", desc: "Reddit, Hacker News, Dev.to, and RSS feeds, all in one place, deduplicated and ranked." },
             { icon: "📌", title: "Save for later", desc: "Bookmark articles to your saved list and come back to them anytime." },
             { icon: "🌗", title: "Light & dark mode", desc: "Looks great in both. Follows your system preference or switch manually." },
           ].map((f) => (

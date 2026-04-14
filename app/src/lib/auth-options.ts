@@ -10,6 +10,7 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
+        rememberMe: { label: "Remember Me", type: "text" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password)
@@ -27,6 +28,7 @@ export const authOptions: NextAuthOptions = {
           role: user.role,
           mustChangePassword: user.mustChangePassword,
           onboarded: user.onboarded,
+          rememberMe: credentials.rememberMe !== "false",
         };
       },
     }),
@@ -55,6 +57,9 @@ export const authOptions: NextAuthOptions = {
         token.role = (user as any).role;
         token.mustChangePassword = (user as any).mustChangePassword;
         token.onboarded = (user as any).onboarded;
+        const rememberMe = (user as any).rememberMe !== false;
+        // 30 days if remembered, 1 day if not
+        token.exp = Math.floor(Date.now() / 1000) + (rememberMe ? 30 * 24 * 60 * 60 : 24 * 60 * 60);
       }
       // Re-fetch user on every session check to catch bans and role changes
       if (token.id && trigger !== "signIn") {

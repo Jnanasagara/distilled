@@ -15,6 +15,7 @@ export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [checkEmail, setCheckEmail] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const router = useRouter();
 
   const searchParams = typeof window !== "undefined"
@@ -82,7 +83,7 @@ export default function AuthPage() {
         return;
       }
 
-      const result = await signIn("credentials", { email, password, redirect: false });
+      const result = await signIn("credentials", { email, password, rememberMe: String(rememberMe), redirect: false });
       if (!result?.ok) { setError(result?.error ?? "Invalid email or password."); setLoading(false); return; }
       const session = await getSession();
       if (session?.user?.role === "ADMIN") {
@@ -482,6 +483,22 @@ export default function AuthPage() {
                   )}
                 </div>
               </div>
+
+              {mode === "login" && (
+                <label style={{
+                  display: "flex", alignItems: "center", gap: 8,
+                  cursor: "pointer", fontSize: 13, color: "var(--text-muted)",
+                  userSelect: "none",
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    style={{ width: 15, height: 15, accentColor: "#6366f1", cursor: "pointer" }}
+                  />
+                  Remember me for 30 days
+                </label>
+              )}
 
               {error && <div className="auth-error">{error}</div>}
 

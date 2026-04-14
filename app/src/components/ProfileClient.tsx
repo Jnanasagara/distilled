@@ -431,7 +431,7 @@ export default function ProfileClient() {
             {/* Topic interest bar chart */}
             <div className="prof-card">
               <div className="prof-card-title">Your Interests</div>
-              <div className="prof-card-desc">Topic weights — higher means you engage more with this topic.</div>
+              <div className="prof-card-desc">Topic weights: higher means you engage more with this topic.</div>
               {data.topicWeights.length === 0 ? (
                 <div className="prof-empty">No topics selected yet.</div>
               ) : (

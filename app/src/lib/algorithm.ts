@@ -205,7 +205,7 @@ export function generateReason(
 
   if (weight >= 2.0) return `${emoji} You engage a lot with ${topicName}`;
   if (weight >= 1.5) return `${emoji} You've shown interest in ${topicName}`;
-  if (ageHours < 6) return `⚡ Published ${Math.round(ageHours)}h ago — very fresh`;
+  if (ageHours < 6) return `⚡ Published ${Math.round(ageHours)}h ago, very fresh`;
   if (ageHours < 24) return `🕐 Published today from ${topicName}`;
 
   const sourceLabels: Record<string, string> = {

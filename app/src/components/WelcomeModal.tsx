@@ -59,7 +59,7 @@ export default function WelcomeModal() {
             { icon: "🎯", title: "Your feed is personalized", desc: "Articles are ranked by topics you picked. The more you engage, the smarter it gets." },
             { icon: "💡", title: "AI summaries on every card", desc: "Each article has a short summary and a 'how this affects you' insight below the title." },
             { icon: "❓", title: "Why this post?", desc: "Tap the ? button on any card to see exactly why that article was shown to you." },
-            { icon: "📌", title: "Save articles for later", desc: "Tap the bookmark on any card — find them all in your Saved tab." },
+            { icon: "📌", title: "Save articles for later", desc: "Tap the bookmark on any card. Find them all in your Saved tab." },
             { icon: "📬", title: "Email digests", desc: "You'll get a digest of top articles based on your frequency preference (daily/weekly/monthly)." },
           ].map((step) => (
             <div key={step.title} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
