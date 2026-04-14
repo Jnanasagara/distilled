@@ -1,17 +1,40 @@
 import { prisma } from "@/lib/prisma";
+import { redis } from "@/lib/redis";
 import { fetchContentForTopic, FetchedItem, TimeFilter } from "@/lib/fetchers";
 import { summarizeContent } from "@/lib/summarize";
 
-// Global cap per full ingest cycle — not per topic.
-// Actual free tier limit: 20 RPD, 5 RPM (Gemini 2.5 Flash).
-// 4 ingest runs/day × 4 calls = 16/day, leaving a 4-call buffer.
-const SUMMARIZE_CAP_PER_RUN = 4;
+// Hard daily cap enforced via Redis — shared across ALL ingest job types
+// (fresh runs 4×/day + trending 1×/day + archive every 3 days = ~21+ calls without this).
+// Free tier: 20 RPD, 5 RPM. Cap at 16 to leave a safe buffer.
+const DAILY_GEMINI_CAP = 16;
+
+// Atomically increment the daily Redis counter before each Gemini call.
+// Returns true if the call is allowed, false if daily cap is reached.
+async function canCallGemini(): Promise<boolean> {
+  try {
+    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD UTC
+    const key = `gemini:daily:${today}`;
+    const count = await redis.incr(key);
+    if (count === 1) {
+      // First call today — expire key after 25 hours so it cleans itself up
+      await redis.expire(key, 25 * 60 * 60);
+    }
+    if (count > DAILY_GEMINI_CAP) {
+      console.log(`Gemini daily cap reached (${count}/${DAILY_GEMINI_CAP}), skipping summarization.`);
+      return false;
+    }
+    return true;
+  } catch {
+    // Redis unavailable — skip summarization rather than risk blowing quota
+    console.warn("Redis unavailable for Gemini cap check, skipping summarization.");
+    return false;
+  }
+}
 
 export async function ingestContentForTopic(
   topicId: string,
   topicSlug: string,
   timeFilter: TimeFilter = "day",
-  summarizeCounter: { count: number }
 ): Promise<number> {
   const items: FetchedItem[] = await fetchContentForTopic(topicSlug, timeFilter);
 
@@ -36,10 +59,9 @@ export async function ingestContentForTopic(
         },
       });
 
-      // Summarize only if: no summary yet AND global cap not reached.
-      // 5-second delay = 12 RPM, safely under the free-tier 15 RPM limit.
-      if (!result.summary && summarizeCounter.count < SUMMARIZE_CAP_PER_RUN) {
-        summarizeCounter.count++;
+      // Summarize only if: no summary yet AND global daily cap not reached.
+      // 13s delay keeps us safely under 5 RPM (4.6 RPM).
+      if (!result.summary && await canCallGemini()) {
         await new Promise((r) => setTimeout(r, 13000));
         const ai = await summarizeContent(item.title, item.url);
         if (ai) {
@@ -65,13 +87,10 @@ export async function ingestAllTopics(
   const topics = await prisma.topic.findMany();
   console.log(`Starting ingestion for ${topics.length} topics...`);
 
-  // Shared counter passed by reference — caps total Gemini calls across all topics
-  const summarizeCounter = { count: 0 };
-
   for (const topic of topics) {
-    const count = await ingestContentForTopic(topic.id, topic.slug, timeFilter, summarizeCounter);
+    const count = await ingestContentForTopic(topic.id, topic.slug, timeFilter);
     console.log(`✅ ${topic.name}: ${count} items saved`);
   }
 
-  console.log(`Ingestion complete! Summarized ${summarizeCounter.count} articles.`);
+  console.log("Ingestion complete.");
 }
