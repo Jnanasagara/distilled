@@ -1,9 +1,10 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
-    const { scheduleIngestion } = await import("./lib/queue");
+    const { scheduleIngestion, scheduleDigests } = await import("./lib/queue");
 
     // Always register the schedules in Redis (idempotent).
     await scheduleIngestion();
+    await scheduleDigests();
 
     // Only start the in-process worker when there is NO dedicated worker
     // service running (i.e. DEDICATED_WORKER is not set to "true").

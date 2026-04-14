@@ -1,5 +1,6 @@
 import { Worker } from "bullmq";
 import { ingestAllTopics } from "@/lib/ingest";
+import { sendDigests } from "@/lib/digest";
 
 function getRedisConnection() {
   const redisUrl = process.env.REDIS_URL ?? "redis://localhost:6379";
@@ -18,10 +19,18 @@ export function startWorker() {
     "content-ingestion",
     async (job) => {
       console.log(`Processing job: ${job.name}`);
-      
-      const timeFilter = job.data?.timeFilter ?? "day";
-      console.log(`Time filter: ${timeFilter}`);
-      await ingestAllTopics(timeFilter);
+
+      if (job.name === "digest-daily") {
+        await sendDigests("DAILY");
+      } else if (job.name === "digest-weekly") {
+        await sendDigests("WEEKLY");
+      } else if (job.name === "digest-monthly") {
+        await sendDigests("MONTHLY");
+      } else {
+        const timeFilter = job.data?.timeFilter ?? "day";
+        console.log(`Time filter: ${timeFilter}`);
+        await ingestAllTopics(timeFilter);
+      }
     },
     { connection }
   );

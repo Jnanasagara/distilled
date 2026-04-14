@@ -47,3 +47,28 @@ export async function scheduleIngestion() {
 
   console.log("✅ Ingestion schedules registered (fresh/trending/archive)");
 }
+
+export async function scheduleDigests() {
+  // Daily digest — runs every 24 hours
+  await contentQueue.upsertJobScheduler(
+    "digest-daily",
+    { every: 1000 * 60 * 60 * 24 },
+    { name: "digest-daily", data: { frequency: "DAILY" } }
+  );
+
+  // Weekly digest — runs every 7 days
+  await contentQueue.upsertJobScheduler(
+    "digest-weekly",
+    { every: 1000 * 60 * 60 * 24 * 7 },
+    { name: "digest-weekly", data: { frequency: "WEEKLY" } }
+  );
+
+  // Monthly digest — runs every 30 days
+  await contentQueue.upsertJobScheduler(
+    "digest-monthly",
+    { every: 1000 * 60 * 60 * 24 * 30 },
+    { name: "digest-monthly", data: { frequency: "MONTHLY" } }
+  );
+
+  console.log("✅ Digest schedules registered (daily/weekly/monthly)");
+}
