@@ -46,6 +46,54 @@ const FALLBACK_GRADIENTS: Record<string, string> = {
   rss:         "linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)",
 };
 
+// Curated Unsplash images per topic (normalized lowercase key)
+const TOPIC_FALLBACK_IMAGES: Record<string, string> = {
+  "technology":           "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80",
+  "ai":                   "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?auto=format&fit=crop&w=800&q=80",
+  "artificial intelligence": "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?auto=format&fit=crop&w=800&q=80",
+  "programming":          "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=800&q=80",
+  "software":             "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=800&q=80",
+  "web development":      "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=800&q=80",
+  "finance":              "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=800&q=80",
+  "investing":            "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=800&q=80",
+  "stocks":               "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=800&q=80",
+  "crypto":               "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?auto=format&fit=crop&w=800&q=80",
+  "cryptocurrency":       "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?auto=format&fit=crop&w=800&q=80",
+  "blockchain":           "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?auto=format&fit=crop&w=800&q=80",
+  "science":              "https://images.unsplash.com/photo-1507413245164-6160d8298b31?auto=format&fit=crop&w=800&q=80",
+  "health":               "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800&q=80",
+  "healthcare":           "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800&q=80",
+  "medicine":             "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800&q=80",
+  "politics":             "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?auto=format&fit=crop&w=800&q=80",
+  "business":             "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80",
+  "startups":             "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80",
+  "gaming":               "https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?auto=format&fit=crop&w=800&q=80",
+  "games":                "https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?auto=format&fit=crop&w=800&q=80",
+  "sports":               "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=800&q=80",
+  "entertainment":        "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80",
+  "space":                "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=800&q=80",
+  "astronomy":            "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=800&q=80",
+  "environment":          "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=800&q=80",
+  "climate":              "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=800&q=80",
+  "food":                 "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80",
+  "travel":               "https://images.unsplash.com/photo-1488085061387-422e29b40080?auto=format&fit=crop&w=800&q=80",
+  "design":               "https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=800&q=80",
+  "security":             "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=800&q=80",
+  "cybersecurity":        "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=800&q=80",
+  "data":                 "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80",
+  "machine learning":     "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?auto=format&fit=crop&w=800&q=80",
+  "devops":               "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80",
+  "cloud":                "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80",
+};
+
+// Source-based fallback when topic has no match
+const SOURCE_FALLBACK_IMAGES: Record<string, string> = {
+  hackernews: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=800&q=80",
+  devto:      "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=800&q=80",
+  reddit:     "https://images.unsplash.com/photo-1432821596592-e2c18b78144f?auto=format&fit=crop&w=800&q=80",
+  rss:        "https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=800&q=80",
+};
+
 const SOURCE_LABELS: Record<string, string> = {
   reddit: "Reddit",
   hackernews: "Hacker News",
@@ -108,6 +156,7 @@ function ArticleCard({
   const [showReason, setShowReason] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [fallbackImgError, setFallbackImgError] = useState(false);
   const [copied, setCopied] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -150,6 +199,11 @@ function ArticleCard({
   }, []);
 
   const hasImage = article.imageUrl && !imgError;
+  const topicKey = article.topic?.name?.toLowerCase() ?? "";
+  const fallbackImgUrl =
+    TOPIC_FALLBACK_IMAGES[topicKey] ??
+    SOURCE_FALLBACK_IMAGES[article.source] ??
+    TOPIC_FALLBACK_IMAGES["technology"];
 
   return (
     <div
@@ -170,6 +224,14 @@ function ArticleCard({
               onError={() => setImgError(true)}
             />
           </>
+        ) : !fallbackImgError ? (
+          <img
+            src={fallbackImgUrl}
+            alt={article.topic?.name ?? sourceLabel}
+            className="card-image loaded"
+            loading="lazy"
+            onError={() => setFallbackImgError(true)}
+          />
         ) : (
           <div
             className="card-image-fallback"
@@ -326,6 +388,7 @@ export default function FeedClient() {
   const [page, setPage] = useState(1);
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeName, setWelcomeName] = useState("");
+  const [showScreenNudge, setShowScreenNudge] = useState(false);
 
   useEffect(() => {
     fetch("/api/feed")
@@ -348,6 +411,13 @@ export default function FeedClient() {
       return () => clearTimeout(t);
     }
   }, [session?.user?.id]);
+
+  // Screen time nudge — fires once after 30 minutes of continuous reading
+  useEffect(() => {
+    const THIRTY_MIN = 30 * 60 * 1000;
+    const t = setTimeout(() => setShowScreenNudge(true), THIRTY_MIN);
+    return () => clearTimeout(t);
+  }, []);
 
   async function handleLike(articleId: string, isLiked: boolean) {
     const method = isLiked ? "DELETE" : "POST";
@@ -694,6 +764,23 @@ export default function FeedClient() {
         @media (max-width: 640px) {
           .welcome-toast { top: 68px; right: 12px; left: 12px; max-width: unset; }
         }
+
+        /* ===== SCREEN TIME NUDGE TOAST ===== */
+        .screen-nudge {
+          position: fixed; bottom: 80px; right: 20px; z-index: 200;
+          background: var(--bg-card);
+          border: 1.5px solid var(--border-default);
+          border-left: 4px solid #f59e0b;
+          border-radius: 14px;
+          padding: 14px 18px;
+          display: flex; align-items: center; gap: 12px;
+          box-shadow: var(--shadow-lg);
+          max-width: 300px;
+          animation: welcomeIn 0.35s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        @media (max-width: 640px) {
+          .screen-nudge { bottom: 72px; right: 12px; left: 12px; max-width: unset; }
+        }
       `}</style>
 
       {showWelcome && (
@@ -704,6 +791,21 @@ export default function FeedClient() {
             <div className="welcome-sub">Your feed is ready.</div>
           </div>
           <button className="welcome-close" onClick={() => setShowWelcome(false)} title="Dismiss">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+      )}
+
+      {showScreenNudge && (
+        <div className="screen-nudge">
+          <div className="welcome-icon">☕</div>
+          <div className="welcome-text">
+            <div className="welcome-title">You&apos;ve been reading for 30 min</div>
+            <div className="welcome-sub">Time for a short break.</div>
+          </div>
+          <button className="welcome-close" onClick={() => setShowScreenNudge(false)} title="Dismiss">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
             </svg>
