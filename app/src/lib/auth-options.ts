@@ -60,7 +60,7 @@ export const authOptions: NextAuthOptions = {
         const isAdmin = (user as any).role === "ADMIN";
         const rememberMe = !isAdmin && (user as any).rememberMe !== false;
         // Admins always get 1 day. Regular users: 30 days if remembered, 1 day if not.
-        token.exp = Math.floor(Date.now() / 1000) + (rememberMe ? 30 * 24 * 60 * 60 : 24 * 60 * 60);
+        token.exp = Math.floor(Date.now() / 1000) + (rememberMe ? 365 * 24 * 60 * 60 : 24 * 60 * 60);
       }
       // Re-fetch user on every session check to catch bans and role changes
       if (token.id && trigger !== "signIn") {

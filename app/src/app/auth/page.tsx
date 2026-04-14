@@ -496,7 +496,7 @@ export default function AuthPage() {
                     onChange={(e) => setRememberMe(e.target.checked)}
                     style={{ width: 15, height: 15, accentColor: "#6366f1", cursor: "pointer" }}
                   />
-                  Remember me for 30 days
+                  Remember me
                 </label>
               )}
 
