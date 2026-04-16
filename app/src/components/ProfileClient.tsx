@@ -324,7 +324,7 @@ export default function ProfileClient() {
             {showAvatarPicker && (
               <AvatarPicker
                 mode="modal"
-                currentSeed={data.user.avatarSeed ?? undefined}
+                currentSeed={data.user.avatarSeed}
                 saveLabel={avatarSaving ? "Saving..." : "Save avatar"}
                 onCancel={() => setShowAvatarPicker(false)}
                 onSave={async (seed) => {
