@@ -549,20 +549,20 @@ export default async function Home() {
               <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 10, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase" }}>Your topics</div>
               <div className="lp-topics-demo">
                 {[
-                  { emoji: "🤖", label: "AI", active: true },
-                  { emoji: "💻", label: "Programming", active: true },
-                  { emoji: "📈", label: "Finance", active: true },
-                  { emoji: "🔐", label: "Security", active: false },
-                  { emoji: "🚀", label: "Startups", active: true },
-                  { emoji: "☁️", label: "Cloud", active: false },
-                  { emoji: "🌍", label: "Climate", active: false },
-                  { emoji: "🎮", label: "Gaming", active: true },
+                  { label: "AI", active: true },
+                  { label: "Programming", active: true },
+                  { label: "Finance", active: true },
+                  { label: "Security", active: false },
+                  { label: "Startups", active: true },
+                  { label: "Cloud", active: false },
+                  { label: "Climate", active: false },
+                  { label: "Gaming", active: true },
                 ].map((t) => (
                   <div key={t.label} className={`lp-topic-chip ${t.active ? "active" : ""}`}>
                     <div className={`lp-topic-check ${t.active ? "checked" : ""}`}>
                       {t.active && "✓"}
                     </div>
-                    {t.emoji} {t.label}
+                    {t.label}
                   </div>
                 ))}
               </div>
