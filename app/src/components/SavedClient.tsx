@@ -205,6 +205,7 @@ function SavedCard({
 export default function SavedClient() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
   useEffect(() => {
     fetch("/api/saved")
       .then((r) => r.json())
@@ -214,6 +215,14 @@ export default function SavedClient() {
       })
       .catch(() => setLoading(false));
   }, []);
+
+  const searchLower = search.toLowerCase();
+  const filtered = articles.filter((a) =>
+    !searchLower ||
+    a.title.toLowerCase().includes(searchLower) ||
+    (a.topic?.name ?? "").toLowerCase().includes(searchLower) ||
+    a.source.toLowerCase().includes(searchLower)
+  );
 
   async function unsave(articleId: string) {
     await fetch("/api/interactions", {
@@ -365,6 +374,30 @@ export default function SavedClient() {
         .saved-empty-title { font-size: 20px; font-weight: 700; color: var(--text-heading); margin: 0 0 8px; }
         .saved-empty-text { font-size: 14px; color: var(--text-subtle); line-height: 1.6; margin: 0; }
 
+        /* Search */
+        .saved-search-wrap { position: relative; margin-bottom: 20px; }
+        .saved-search-icon {
+          position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+          color: var(--text-subtle); pointer-events: none; display: flex; align-items: center;
+        }
+        .saved-search {
+          width: 100%; padding: 10px 14px 10px 40px;
+          border: 1.5px solid var(--border-default); border-radius: 12px;
+          background: var(--bg-input); color: var(--text-heading);
+          font-family: inherit; font-size: 14px; outline: none; transition: all 0.2s ease;
+        }
+        .saved-search::placeholder { color: var(--text-subtle); }
+        .saved-search:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); background: var(--bg-input-focus); }
+        .saved-search-clear {
+          position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+          background: none; border: none; cursor: pointer;
+          color: var(--text-subtle); display: flex; align-items: center; padding: 2px;
+          border-radius: 6px; transition: color 0.15s;
+        }
+        .saved-search-clear:hover { color: var(--text-heading); }
+        .saved-search-empty { text-align: center; padding: 40px 20px; color: var(--text-subtle); font-size: 14px; line-height: 1.6; }
+        .saved-search-empty strong { color: var(--text-muted); display: block; font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+
         @media (max-width: 640px) {
           .saved-container { padding: 16px 16px 60px; }
           .saved-heading { font-size: 22px; }
@@ -406,20 +439,50 @@ export default function SavedClient() {
             <div className="saved-hero">
               <h1 className="saved-heading">
                 Saved Articles
-                <span className="saved-count">{articles.length}</span>
+                <span className="saved-count">{search ? filtered.length : articles.length}</span>
               </h1>
               <p className="saved-subtitle">Your bookmarked articles for later reading.</p>
             </div>
-            <div className="saved-grid">
-              {articles.map((article, i) => (
-                <SavedCard
-                  key={article.id}
-                  article={article}
-                  onUnsave={unsave}
-                  index={i}
-                />
-              ))}
+
+            <div className="saved-search-wrap">
+              <span className="saved-search-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+                </svg>
+              </span>
+              <input
+                className="saved-search"
+                type="text"
+                placeholder="Search saved articles..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              {search && (
+                <button className="saved-search-clear" onClick={() => setSearch("")} title="Clear">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              )}
             </div>
+
+            {filtered.length === 0 && search ? (
+              <div className="saved-search-empty">
+                <strong>No results for &quot;{search}&quot;</strong>
+                Try a different keyword or clear the search.
+              </div>
+            ) : (
+              <div className="saved-grid">
+                {filtered.map((article, i) => (
+                  <SavedCard
+                    key={article.id}
+                    article={article}
+                    onUnsave={unsave}
+                    index={i}
+                  />
+                ))}
+              </div>
+            )}
           </>
         )}
       </div>

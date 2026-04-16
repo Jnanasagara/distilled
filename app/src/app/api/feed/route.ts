@@ -72,18 +72,26 @@ export async function GET() {
       userTopics.map((ut) => [ut.topicId, ut.weight])
     );
 
-    // Session digest — get articles user already clicked
-    const clickedIds = await prisma.interaction.findMany({
-      where: { userId, type: "CLICK" },
-      select: { contentId: true },
-    });
-    const clickedSet = new Set(clickedIds.map((i) => i.contentId));
+    // Session digest — get articles user already clicked or dismissed, plus blocked sources
+    const [excludedInteractions, blockedSources] = await Promise.all([
+      prisma.interaction.findMany({
+        where: { userId, type: { in: ["CLICK", "DISMISS"] } },
+        select: { contentId: true },
+      }),
+      prisma.blockedSource.findMany({
+        where: { userId },
+        select: { source: true },
+      }),
+    ]);
+    const excludedSet = new Set(excludedInteractions.map((i) => i.contentId));
+    const blockedSourceSet = new Set(blockedSources.map((b) => b.source));
 
-    // Fetch candidate articles — exclude already clicked
+    // Fetch candidate articles — exclude already clicked/dismissed and blocked sources
     const rawArticles = await prisma.content.findMany({
       where: {
         topicId: { in: topicIds },
-        id: { notIn: Array.from(clickedSet) },
+        id: { notIn: Array.from(excludedSet) },
+        ...(blockedSourceSet.size > 0 ? { source: { notIn: Array.from(blockedSourceSet) } } : {}),
       },
       orderBy: { publishedAt: "desc" },
       take: postCount * 4,

@@ -18,6 +18,7 @@ type Props = {
   initialPostCount?: number;
   initialFrequency?: "DAILY" | "WEEKLY" | "MONTHLY";
   initialShowTrending?: boolean;
+  initialBlockedSources?: string[];
   mode: "onboarding" | "preferences";
   userId: string;
 };
@@ -28,6 +29,13 @@ const FREQUENCY_OPTIONS = [
   { value: "MONTHLY", label: "Monthly", description: "Deep monthly digest" },
 ] as const;
 
+const SOURCE_OPTIONS = [
+  { value: "hackernews", label: "Hacker News" },
+  { value: "reddit",     label: "Reddit" },
+  { value: "devto",      label: "Dev.to" },
+  { value: "rss",        label: "RSS" },
+] as const;
+
 export default function PreferencesForm({
   topics,
   initialTopicIds = [],
@@ -35,6 +43,7 @@ export default function PreferencesForm({
   initialPostCount = 20,
   initialFrequency = "DAILY",
   initialShowTrending = true,
+  initialBlockedSources = [],
   mode,
   userId,
 }: Props) {
@@ -44,6 +53,7 @@ export default function PreferencesForm({
   const [postCount, setPostCount] = useState(initialPostCount);
   const [frequency, setFrequency] = useState<"DAILY" | "WEEKLY" | "MONTHLY">(initialFrequency);
   const [showTrending, setShowTrending] = useState(initialShowTrending);
+  const [blockedSources, setBlockedSources] = useState<Set<string>>(new Set(initialBlockedSources));
   const [saving, setSaving] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [resetDone, setResetDone] = useState(false);
@@ -99,6 +109,31 @@ export default function PreferencesForm({
       });
     } catch {
       togglePause(topicId);
+    }
+  }
+
+  async function handleToggleBlockedSource(source: string) {
+    const isBlocked = blockedSources.has(source);
+    setBlockedSources((prev) => {
+      const next = new Set(prev);
+      if (isBlocked) next.delete(source);
+      else next.add(source);
+      return next;
+    });
+    try {
+      await fetch("/api/user/blocked-sources", {
+        method: isBlocked ? "DELETE" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ source }),
+      });
+    } catch {
+      // Rollback on failure
+      setBlockedSources((prev) => {
+        const next = new Set(prev);
+        if (isBlocked) next.add(source);
+        else next.delete(source);
+        return next;
+      });
     }
   }
 
@@ -321,6 +356,24 @@ export default function PreferencesForm({
         input:checked + .toggle-track { background: var(--primary); }
         input:checked + .toggle-track::after { transform: translateX(20px); }
 
+        /* Source block chips */
+        .source-block-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+        .source-block-chip {
+          display: flex; align-items: center; gap: 8px;
+          padding: 9px 16px; border-radius: 12px;
+          border: 1.5px solid var(--border-default); background: var(--bg-card);
+          font-family: inherit; font-size: 13.5px; font-weight: 500;
+          color: var(--text-body); cursor: pointer;
+          transition: all 0.2s ease; user-select: none;
+        }
+        .source-block-chip:hover { border-color: var(--text-error); color: var(--text-error); background: var(--bg-error); }
+        .source-block-chip.blocked {
+          background: var(--bg-error); border-color: var(--text-error);
+          color: var(--text-error); text-decoration: line-through; opacity: 0.8;
+        }
+        .source-block-chip.blocked:hover { opacity: 1; border-color: var(--border-default); background: var(--bg-card); color: var(--text-body); text-decoration: none; }
+        .source-block-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
         /* Error & Submit */
         .error-msg {
           color: var(--text-error); font-size: 13px; text-align: center;
@@ -479,6 +532,40 @@ export default function PreferencesForm({
                 />
                 <span className="toggle-track" />
               </label>
+            </div>
+          </div>
+        )}
+
+        {mode === "preferences" && (
+          <div className="section">
+            <h2 className="section-title">Blocked Sources</h2>
+            <p className="section-desc">
+              Hide all articles from a source. Blocked sources are greyed out and excluded from your feed.
+              Click a source to block it, click again to unblock.
+            </p>
+            <div className="source-block-grid">
+              {SOURCE_OPTIONS.map((opt) => {
+                const isBlocked = blockedSources.has(opt.value);
+                const dotColors: Record<string, string> = {
+                  hackernews: "#FF6600", reddit: "#FF4500", devto: "#3B49DF", rss: "#FFA500",
+                };
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    className={`source-block-chip ${isBlocked ? "blocked" : ""}`}
+                    onClick={() => handleToggleBlockedSource(opt.value)}
+                  >
+                    <span className="source-block-dot" style={{ background: dotColors[opt.value] }} />
+                    {opt.label}
+                    {isBlocked && (
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginLeft: 2 }}>
+                        <circle cx="12" cy="12" r="10" /><line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                      </svg>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}

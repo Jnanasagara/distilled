@@ -147,11 +147,13 @@ function ArticleCard({
   article,
   onLike,
   onSave,
+  onDismiss,
   index,
 }: {
   article: Article;
   onLike: (id: string, liked: boolean) => void;
   onSave: (id: string, saved: boolean) => void;
+  onDismiss: (id: string) => void;
   index: number;
 }) {
   const [showReason, setShowReason] = useState(false);
@@ -159,6 +161,7 @@ function ArticleCard({
   const [imgError, setImgError] = useState(false);
   const [fallbackImgError, setFallbackImgError] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [dismissing, setDismissing] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
   async function handleShare() {
@@ -179,6 +182,11 @@ function ArticleCard({
       } catch { /* ignore */ }
     }
   }
+  function handleDismiss() {
+    setDismissing(true);
+    setTimeout(() => onDismiss(article.id), 300);
+  }
+
   const sourceColor = SOURCE_COLORS[article.source] ?? "#888";
   const sourceLabel = SOURCE_LABELS[article.source] ?? article.source;
   const sourceEmoji = SOURCE_EMOJI[article.source] ?? "📰";
@@ -209,9 +217,14 @@ function ArticleCard({
   return (
     <div
       ref={cardRef}
-      className={`article-card card-enter ${article._isTrending ? "trending-card" : ""}`}
+      className={`article-card card-enter ${article._isTrending ? "trending-card" : ""} ${dismissing ? "card-dismissing" : ""}`}
       style={{ animationDelay: `${index * 60}ms` }}
     >
+      <button className="card-dismiss-btn" onClick={handleDismiss} title="Not interested">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
       <div className="card-image-wrapper">
         {hasImage ? (
           <>
@@ -386,6 +399,7 @@ export default function FeedClient() {
   const [feed, setFeed] = useState<FeedData | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeName, setWelcomeName] = useState("");
@@ -482,18 +496,41 @@ export default function FeedClient() {
     }
   }
 
+  async function handleDismiss(articleId: string) {
+    // Optimistic remove
+    setFeed((prev) =>
+      prev ? { ...prev, articles: prev.articles.filter((a) => a.id !== articleId) } : prev
+    );
+    fetch("/api/interactions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contentId: articleId, type: "DISMISS" }),
+    });
+  }
+
   const sources = ["all", "hackernews", "reddit", "devto", "rss"];
 
-  const filtered =
-    filter === "all"
-      ? feed?.articles ?? []
-      : (feed?.articles ?? []).filter((a) => a.source === filter);
+  const searchLower = search.toLowerCase();
+  const filtered = (feed?.articles ?? []).filter((a) => {
+    const matchesSource = filter === "all" || a.source === filter;
+    const matchesSearch =
+      !searchLower ||
+      a.title.toLowerCase().includes(searchLower) ||
+      (a.topic?.name ?? "").toLowerCase().includes(searchLower) ||
+      (a.source).toLowerCase().includes(searchLower);
+    return matchesSource && matchesSearch;
+  });
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   function handleFilterChange(s: string) {
     setFilter(s);
+    setPage(1);
+  }
+
+  function handleSearchChange(val: string) {
+    setSearch(val);
     setPage(1);
   }
 
@@ -725,11 +762,59 @@ export default function FeedClient() {
         .empty-title { font-size: 20px; font-weight: 700; color: var(--text-heading); margin: 0 0 8px; }
         .empty-text { font-size: 14px; color: var(--text-subtle); line-height: 1.6; margin: 0; }
 
+        /* ===== DISMISS BUTTON ===== */
+        .article-card { position: relative; }
+        .card-dismiss-btn {
+          position: absolute; top: 10px; right: 10px; z-index: 10;
+          width: 28px; height: 28px; border-radius: 8px;
+          border: none; background: rgba(0,0,0,0.45); backdrop-filter: blur(4px);
+          color: rgba(255,255,255,0.85); cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
+          opacity: 0; transition: opacity 0.2s ease, background 0.2s ease;
+        }
+        .article-card:hover .card-dismiss-btn { opacity: 1; }
+        .card-dismiss-btn:hover { background: rgba(239,68,68,0.85); color: white; }
+        .card-dismissing { animation: cardDismiss 0.3s ease forwards !important; }
+        @keyframes cardDismiss { to { opacity: 0; transform: scale(0.95) translateY(8px); } }
+
+        /* ===== SEARCH BAR ===== */
+        .feed-search-wrap {
+          position: relative; margin-bottom: 16px;
+        }
+        .feed-search-icon {
+          position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+          color: var(--text-subtle); pointer-events: none;
+          display: flex; align-items: center;
+        }
+        .feed-search {
+          width: 100%; padding: 10px 14px 10px 40px;
+          border: 1.5px solid var(--border-default); border-radius: 12px;
+          background: var(--bg-input); color: var(--text-heading);
+          font-family: inherit; font-size: 14px;
+          outline: none; transition: all 0.2s ease;
+        }
+        .feed-search::placeholder { color: var(--text-subtle); }
+        .feed-search:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); background: var(--bg-input-focus); }
+        .feed-search-clear {
+          position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+          background: none; border: none; cursor: pointer;
+          color: var(--text-subtle); display: flex; align-items: center; padding: 2px;
+          border-radius: 6px; transition: color 0.15s;
+        }
+        .feed-search-clear:hover { color: var(--text-heading); }
+        .search-empty {
+          text-align: center; padding: 40px 20px;
+          color: var(--text-subtle); font-size: 14px; line-height: 1.6;
+        }
+        .search-empty strong { color: var(--text-muted); display: block; font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+
         /* ===== RESPONSIVE ===== */
         @media (max-width: 640px) {
           .feed-container { padding: 16px 16px 60px; }
           .feed-greeting { font-size: 22px; }
           .card-title { font-size: 15px; }
+          /* Dismiss button always visible on touch screens */
+          .card-dismiss-btn { opacity: 0.75; }
         }
 
         /* ===== WELCOME TOAST ===== */
@@ -843,6 +928,28 @@ export default function FeedClient() {
               <h1 className="feed-greeting">Your Feed</h1>
             </div>
 
+            <div className="feed-search-wrap">
+              <span className="feed-search-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+                </svg>
+              </span>
+              <input
+                className="feed-search"
+                type="text"
+                placeholder="Search articles, topics, sources..."
+                value={search}
+                onChange={(e) => handleSearchChange(e.target.value)}
+              />
+              {search && (
+                <button className="feed-search-clear" onClick={() => handleSearchChange("")} title="Clear search">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              )}
+            </div>
+
             <div className="filter-bar">
               {sources.map((s) => (
                 <button
@@ -858,17 +965,25 @@ export default function FeedClient() {
               ))}
             </div>
 
-            <div className="articles-grid">
-              {paginated.map((article, i) => (
-                <ArticleCard
-                  key={article.id}
-                  article={article}
-                  onLike={handleLike}
-                  onSave={handleSave}
-                  index={i}
-                />
-              ))}
-            </div>
+            {filtered.length === 0 && search ? (
+              <div className="search-empty">
+                <strong>No results for &quot;{search}&quot;</strong>
+                Try a different keyword or clear the search.
+              </div>
+            ) : (
+              <div className="articles-grid">
+                {paginated.map((article, i) => (
+                  <ArticleCard
+                    key={article.id}
+                    article={article}
+                    onLike={handleLike}
+                    onSave={handleSave}
+                    onDismiss={handleDismiss}
+                    index={i}
+                  />
+                ))}
+              </div>
+            )}
 
             {totalPages > 1 && (
               <div className="pagination">

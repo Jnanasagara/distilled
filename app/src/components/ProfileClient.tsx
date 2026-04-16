@@ -25,6 +25,8 @@ type ProfileData = {
     todaySeconds: number;
     avgSeconds: number;
     chart: { date: string; minutes: number }[];
+    currentStreak: number;
+    longestStreak: number;
   };
 };
 
@@ -61,6 +63,11 @@ export default function ProfileClient() {
 
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [avatarSaving, setAvatarSaving] = useState(false);
+
+  const [editingName, setEditingName] = useState(false);
+  const [nameValue, setNameValue] = useState("");
+  const [nameSaving, setNameSaving] = useState(false);
+  const [nameError, setNameError] = useState("");
 
   const [showReport, setShowReport] = useState(false);
   const [reportMsg, setReportMsg] = useState("");
@@ -108,6 +115,26 @@ export default function ProfileClient() {
       else { setPwSuccess("Password changed successfully!"); setPwForm({ currentPassword: "", newPassword: "", confirmPassword: "" }); }
     } catch { setPwError("Network error. Please try again."); }
     finally { setPwLoading(false); }
+  }
+
+  async function handleSaveName() {
+    setNameError("");
+    if (!nameValue.trim()) { setNameError("Name cannot be empty."); return; }
+    setNameSaving(true);
+    try {
+      const res = await fetch("/api/user/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: nameValue }),
+      });
+      const d = await res.json();
+      if (!res.ok) { setNameError(d.error ?? "Failed to update name."); }
+      else {
+        setData((prev) => prev ? { ...prev, user: { ...prev.user, name: d.name } } : prev);
+        setEditingName(false);
+      }
+    } catch { setNameError("Network error. Please try again."); }
+    finally { setNameSaving(false); }
   }
 
   useEffect(() => {
@@ -285,6 +312,59 @@ export default function ProfileClient() {
           .prof-habits-stats { grid-template-columns: 1fr; }
         }
 
+        /* Streaks */
+        .prof-streak-row {
+          display: flex; align-items: center; gap: 0;
+          background: var(--bg-elevated); border-radius: 12px;
+          border: 1px solid var(--border-divider);
+          margin-top: 16px; overflow: hidden;
+        }
+        .prof-streak-item {
+          flex: 1; display: flex; align-items: center; gap: 12px;
+          padding: 16px 20px;
+        }
+        .prof-streak-fire { font-size: 24px; flex-shrink: 0; }
+        .prof-streak-value { font-size: 18px; font-weight: 800; color: var(--text-heading); letter-spacing: -0.5px; }
+        .prof-streak-label { font-size: 11px; color: var(--text-subtle); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; }
+        .prof-streak-divider { width: 1px; background: var(--border-divider); align-self: stretch; flex-shrink: 0; }
+        @media (max-width: 360px) {
+          .prof-streak-item { padding: 12px 14px; gap: 8px; }
+          .prof-streak-fire { font-size: 20px; }
+          .prof-streak-value { font-size: 15px; }
+        }
+
+        /* Name edit */
+        .prof-name-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+        .prof-name-edit-btn {
+          background: none; border: none; cursor: pointer; padding: 4px;
+          color: var(--text-subtle); border-radius: 6px;
+          display: flex; align-items: center; transition: color 0.15s;
+        }
+        .prof-name-edit-btn:hover { color: var(--primary); }
+        .prof-name-input-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
+        .prof-name-input {
+          padding: 7px 12px; border: 1.5px solid var(--primary); border-radius: 10px;
+          font-family: inherit; font-size: 15px; font-weight: 700; color: var(--text-heading);
+          background: var(--bg-input); outline: none; min-width: 0; flex: 1;
+          box-shadow: 0 0 0 3px var(--primary-light);
+        }
+        .prof-name-save {
+          padding: 7px 14px; border: none; border-radius: 10px;
+          background: var(--primary); color: white;
+          font-family: inherit; font-size: 13px; font-weight: 700;
+          cursor: pointer; transition: background 0.2s; white-space: nowrap;
+        }
+        .prof-name-save:hover { background: var(--btn-dark-hover); }
+        .prof-name-save:disabled { opacity: 0.5; cursor: not-allowed; }
+        .prof-name-cancel {
+          padding: 7px 14px; border: 1.5px solid var(--border-default); border-radius: 10px;
+          background: transparent; color: var(--text-muted);
+          font-family: inherit; font-size: 13px; font-weight: 600;
+          cursor: pointer; transition: all 0.2s; white-space: nowrap;
+        }
+        .prof-name-cancel:hover { border-color: var(--text-muted); color: var(--text-heading); }
+        .prof-name-err { font-size: 12px; color: var(--text-error); margin-top: 2px; }
+
         /* Empty state */
         .prof-empty { text-align: center; padding: 40px 20px; color: var(--text-subtle); font-size: 14px; }
 
@@ -352,7 +432,41 @@ export default function ProfileClient() {
                 <span className="prof-avatar-overlay">Edit</span>
               </div>
               <div className="prof-info">
-                <div className="prof-name">{data.user.name ?? "No name set"}</div>
+                {editingName ? (
+                  <>
+                    <div className="prof-name-input-row">
+                      <input
+                        className="prof-name-input"
+                        value={nameValue}
+                        onChange={(e) => setNameValue(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") handleSaveName(); if (e.key === "Escape") setEditingName(false); }}
+                        maxLength={64}
+                        autoFocus
+                      />
+                      <button className="prof-name-save" onClick={handleSaveName} disabled={nameSaving}>
+                        {nameSaving ? "Saving..." : "Save"}
+                      </button>
+                      <button className="prof-name-cancel" onClick={() => { setEditingName(false); setNameError(""); }}>
+                        Cancel
+                      </button>
+                    </div>
+                    {nameError && <div className="prof-name-err">{nameError}</div>}
+                  </>
+                ) : (
+                  <div className="prof-name-row">
+                    <div className="prof-name">{data.user.name ?? "No name set"}</div>
+                    <button
+                      className="prof-name-edit-btn"
+                      title="Edit name"
+                      onClick={() => { setNameValue(data.user.name ?? ""); setEditingName(true); setNameError(""); }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
                 <div className="prof-email">{data.user.email}</div>
                 <span className="prof-since">
                   Member for {memberSince(data.user.createdAt)}
@@ -395,6 +509,26 @@ export default function ProfileClient() {
                   <div className="prof-habit-label">Daily avg</div>
                 </div>
               </div>
+
+              {(data.usage.currentStreak > 0 || data.usage.longestStreak > 0) && (
+                <div className="prof-streak-row">
+                  <div className="prof-streak-item">
+                    <span className="prof-streak-fire">🔥</span>
+                    <div>
+                      <div className="prof-streak-value">{data.usage.currentStreak} day{data.usage.currentStreak !== 1 ? "s" : ""}</div>
+                      <div className="prof-streak-label">Current streak</div>
+                    </div>
+                  </div>
+                  <div className="prof-streak-divider" />
+                  <div className="prof-streak-item">
+                    <span className="prof-streak-fire" style={{ opacity: 0.5 }}>🏆</span>
+                    <div>
+                      <div className="prof-streak-value">{data.usage.longestStreak} day{data.usage.longestStreak !== 1 ? "s" : ""}</div>
+                      <div className="prof-streak-label">Longest streak</div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {data.usage.chart.every((d) => d.minutes === 0) ? (
                 <div className="prof-empty" style={{ padding: "24px 0 8px" }}>

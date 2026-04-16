@@ -16,7 +16,7 @@ export async function GET() {
     fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 13);
     const fourteenDaysAgoStr = fourteenDaysAgo.toISOString().slice(0, 10);
 
-    const [user, stats, userTopics, usageRecords, totalUsage, recentInteractions] = await Promise.all([
+    const [user, stats, userTopics, usageRecords, totalUsage, recentInteractions, allUsageForStreak] = await Promise.all([
       prisma.user.findUnique({
         where: { id: userId },
         select: { name: true, email: true, createdAt: true, avatarSeed: true },
@@ -56,6 +56,13 @@ export async function GET() {
         },
         include: { content: { include: { topic: true } } },
         orderBy: { createdAt: "asc" },
+      }),
+
+      // All usage records for streak calculation
+      prisma.dailyUsage.findMany({
+        where: { userId, seconds: { gt: 0 } },
+        select: { date: true },
+        orderBy: { date: "asc" },
       }),
     ]);
 
@@ -113,6 +120,38 @@ export async function GET() {
       ? Math.round(usageRecords.reduce((s, r) => s + r.seconds, 0) / daysWithData)
       : 0;
 
+    // Streak calculation
+    const activeDateSet = new Set(allUsageForStreak.map((r) => r.date));
+    const dateStr = (offset: number) => {
+      const d = new Date();
+      d.setDate(d.getDate() - offset);
+      return d.toISOString().slice(0, 10);
+    };
+
+    // Current streak: start from today (or yesterday if today unused), go backwards
+    let currentStreak = 0;
+    const startOffset = activeDateSet.has(dateStr(0)) ? 0 : 1;
+    for (let i = startOffset; i < 365; i++) {
+      if (!activeDateSet.has(dateStr(i))) break;
+      currentStreak++;
+    }
+
+    // Longest streak across all history
+    const sortedDates = allUsageForStreak.map((r) => r.date).sort();
+    let longestStreak = currentStreak;
+    let runStreak = sortedDates.length > 0 ? 1 : 0;
+    for (let i = 1; i < sortedDates.length; i++) {
+      const prev = new Date(sortedDates[i - 1]);
+      const curr = new Date(sortedDates[i]);
+      const diff = Math.round((curr.getTime() - prev.getTime()) / 86400000);
+      if (diff === 1) {
+        runStreak++;
+        if (runStreak > longestStreak) longestStreak = runStreak;
+      } else {
+        runStreak = 1;
+      }
+    }
+
     return NextResponse.json({
       user: { ...user, avatarSeed: user?.avatarSeed ?? null },
       stats: {
@@ -133,6 +172,8 @@ export async function GET() {
         todaySeconds,
         avgSeconds,
         chart: usageChart,
+        currentStreak,
+        longestStreak,
       },
     });
   } catch (error) {

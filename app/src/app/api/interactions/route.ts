@@ -6,9 +6,10 @@ import { redis } from "@/lib/redis";
 import { parseJsonBody, validateOrigin } from "@/lib/rate-limit";
 
 const WEIGHT_DELTA: Record<string, number> = {
-  LIKE:  0.15,
-  CLICK: 0.05,
-  SAVE:  0.20,
+  LIKE:    0.15,
+  CLICK:   0.05,
+  SAVE:    0.20,
+  DISMISS: -0.10,
 };
 
 export async function POST(req: Request) {
@@ -24,7 +25,7 @@ export async function POST(req: Request) {
     if ("error" in parsed) return parsed.error;
     const { contentId, type } = parsed.data;
 
-    if (!contentId || typeof contentId !== "string" || !["LIKE", "CLICK", "SAVE"].includes(type)) {
+    if (!contentId || typeof contentId !== "string" || !["LIKE", "CLICK", "SAVE", "DISMISS"].includes(type)) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
 
@@ -45,12 +46,15 @@ export async function POST(req: Request) {
       });
 
       if (userTopic) {
-        const newWeight = Math.min(userTopic.weight + WEIGHT_DELTA[type], 5.0);
+        const delta = WEIGHT_DELTA[type] ?? 0;
+        const newWeight = type === "DISMISS"
+          ? Math.max(userTopic.weight + delta, 0.1)
+          : Math.min(userTopic.weight + delta, 5.0);
         await prisma.userTopic.update({
           where: { id: userTopic.id },
           data: {
             weight: newWeight,
-            lastEngagedAt: new Date(),
+            ...(type !== "DISMISS" ? { lastEngagedAt: new Date() } : {}),
           },
         });
       }
@@ -100,7 +104,8 @@ export async function DELETE(req: Request) {
       });
 
       if (userTopic) {
-        const newWeight = Math.max(userTopic.weight - WEIGHT_DELTA[type], 0.1);
+        const delta = Math.abs(WEIGHT_DELTA[type] ?? 0.05);
+        const newWeight = Math.max(userTopic.weight - delta, 0.1);
         await prisma.userTopic.update({
           where: { id: userTopic.id },
           data: { weight: newWeight },

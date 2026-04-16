@@ -22,13 +22,25 @@ model User {
   mustChangePassword  Boolean   @default(false)
   avatarSeed          String?
 
-  accounts    Account[]
-  sessions    Session[]
-  preferences UserPreference?
-  userTopics  UserTopic[]
-  interactions Interaction[]
-  reports     Report[]
-  dailyUsage  DailyUsage[]
+  accounts       Account[]
+  sessions       Session[]
+  preferences    UserPreference?
+  userTopics     UserTopic[]
+  interactions   Interaction[]
+  reports        Report[]
+  dailyUsage     DailyUsage[]
+  blockedSources BlockedSource[]
+}
+
+model BlockedSource {
+  id        String   @id @default(uuid())
+  userId    String
+  source    String   // "reddit" | "hackernews" | "devto" | "rss"
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, source])
 }
 
 model DailyUsage {
@@ -184,6 +196,7 @@ enum InteractionType {
   LIKE
   CLICK
   SAVE
+  DISMISS
 }
 
 model Report {
