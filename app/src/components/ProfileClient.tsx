@@ -356,7 +356,7 @@ export default function ProfileClient() {
                 <div className="prof-name">{data.user.name ?? "No name set"}</div>
                 <div className="prof-email">{data.user.email}</div>
                 <span className="prof-since">
-                  ⏱ Member for {memberSince(data.user.createdAt)}
+                  Member for {memberSince(data.user.createdAt)}
                 </span>
               </div>
             </div>
@@ -365,22 +365,22 @@ export default function ProfileClient() {
             <div className="prof-stats">
               <div className="prof-stat">
                 <div className="prof-stat-value">{data.stats.likes}</div>
-                <div className="prof-stat-label">❤️ Liked</div>
+                <div className="prof-stat-label">Liked</div>
               </div>
               <div className="prof-stat">
                 <div className="prof-stat-value">{data.stats.saves}</div>
-                <div className="prof-stat-label">🔖 Saved</div>
+                <div className="prof-stat-label">Saved</div>
               </div>
               <div className="prof-stat">
                 <div className="prof-stat-value">{data.stats.clicks}</div>
-                <div className="prof-stat-label">👆 Read</div>
+                <div className="prof-stat-label">Read</div>
               </div>
             </div>
 
             {/* Reading Habits */}
             <div className="prof-card">
               <div className="prof-card-title">Reading Habits</div>
-              <div className="prof-card-desc">Time spent on Distilled — only counts when the tab is active.</div>
+              <div className="prof-card-desc">Time spent on Distilled. Only counts when the tab is active.</div>
 
               <div className="prof-habits-stats">
                 <div className="prof-habit-stat">

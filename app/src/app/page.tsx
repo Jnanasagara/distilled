@@ -435,7 +435,7 @@ export default async function Home() {
                 <div className="lp-mock-title">OpenAI's o3 achieves 87.7% on ARC-AGI, a 25-point jump over GPT-4</div>
                 <div className="lp-mock-summary">The new reasoning model surpasses prior benchmarks by a wide margin, with particularly strong gains in abstract problem-solving and code tasks.</div>
                 <div className="lp-mock-impact">
-                  <div className="lp-mock-impact-label">💡 How this affects you</div>
+                  <div className="lp-mock-impact-label">How this affects you</div>
                   <div className="lp-mock-impact-text">Developers building AI-native products will see cheaper, faster inference for complex reasoning tasks within 60 days of GA release.</div>
                 </div>
                 <div className="lp-mock-actions">
@@ -490,13 +490,13 @@ export default async function Home() {
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {[
-                { icon: "📝", text: "2–3 sentence neutral summary of the article" },
-                { icon: "💡", text: "\"How this affects you\": direct, no fluff" },
-                { icon: "❓", text: "Tap ? on any card to see exactly why it was shown" },
-              ].map((item) => (
-                <div key={item.text} style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-                  <span style={{ fontSize: 16, marginTop: 1 }}>{item.icon}</span>
-                  <span style={{ fontSize: 13.5, color: "rgba(255,255,255,0.45)", lineHeight: 1.6 }}>{item.text}</span>
+                "2–3 sentence neutral summary of the article",
+                "\"How this affects you\": direct, no fluff",
+                "Tap ? on any card to see exactly why it was shown",
+              ].map((text) => (
+                <div key={text} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                  <span style={{ width: 4, height: 4, borderRadius: "50%", background: "rgba(255,255,255,0.3)", flexShrink: 0, marginTop: 8 }} />
+                  <span style={{ fontSize: 13.5, color: "rgba(255,255,255,0.45)", lineHeight: 1.6 }}>{text}</span>
                 </div>
               ))}
             </div>
@@ -507,7 +507,7 @@ export default async function Home() {
                 <div className="lp-impact-demo-title">Rust's async runtime Tokio hits 1.0 stable with breaking API cleanup</div>
                 <div className="lp-impact-demo-text">The Tokio team officially stabilized several long-awaited APIs and removed deprecated patterns that had accumulated since 2019, marking a turning point for the async ecosystem.</div>
                 <div className="lp-impact-demo-block">
-                  <div className="lp-impact-demo-block-label">💡 How this affects you</div>
+                  <div className="lp-impact-demo-block-label">How this affects you</div>
                   <div className="lp-impact-demo-block-text">Rust developers using async I/O will need to update 1-2 call sites per project. Migration is straightforward and worth the improved ergonomics.</div>
                 </div>
               </div>
@@ -622,7 +622,6 @@ export default async function Home() {
         </div>
         <div className="lp-grid">
           <div className="lp-grid-card">
-            <span className="lp-grid-card-icon">📬</span>
             <div className="lp-grid-card-title">Email digests that don't suck</div>
             <div className="lp-grid-card-desc">Choose daily, weekly, or monthly delivery. Each digest includes your top articles with summaries. No need to click through if you don't want to.</div>
             <div className="lp-digest-demo">
@@ -644,12 +643,10 @@ export default async function Home() {
             </div>
           </div>
           <div className="lp-grid-card">
-            <span className="lp-grid-card-icon">📌</span>
             <div className="lp-grid-card-title">Save for later</div>
             <div className="lp-grid-card-desc">Bookmark any article with one tap. Your saved list is always there, synced and searchable, organized by when you saved it.</div>
           </div>
           <div className="lp-grid-card">
-            <span className="lp-grid-card-icon">🌗</span>
             <div className="lp-grid-card-title">Light and dark mode</div>
             <div className="lp-grid-card-desc">Toggle between modes manually or follow your system preference. Both are carefully designed, not just an inverted palette.</div>
           </div>

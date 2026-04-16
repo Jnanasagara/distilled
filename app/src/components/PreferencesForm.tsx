@@ -23,9 +23,9 @@ type Props = {
 };
 
 const FREQUENCY_OPTIONS = [
-  { value: "DAILY", label: "Daily", description: "Fresh picks every day", icon: "☀️" },
-  { value: "WEEKLY", label: "Weekly", description: "Best of the week", icon: "📅" },
-  { value: "MONTHLY", label: "Monthly", description: "Deep monthly digest", icon: "🗓️" },
+  { value: "DAILY", label: "Daily", description: "Fresh picks every day" },
+  { value: "WEEKLY", label: "Weekly", description: "Best of the week" },
+  { value: "MONTHLY", label: "Monthly", description: "Deep monthly digest" },
 ] as const;
 
 export default function PreferencesForm({
@@ -435,7 +435,6 @@ export default function PreferencesForm({
                 className={`freq-card ${frequency === opt.value ? "selected" : ""}`}
                 onClick={() => handleFrequencyChange(opt.value)}
               >
-                <div className="freq-icon">{opt.icon}</div>
                 <div className="freq-label">{opt.label}</div>
                 <div className="freq-desc">{opt.description}</div>
               </div>

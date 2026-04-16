@@ -148,7 +148,7 @@ function SavedCard({
         )}
         {article.impact && (
           <div className="saved-card-impact">
-            <span className="saved-impact-label">💡 How this affects you</span>
+            <span className="saved-impact-label">How this affects you</span>
             <p className="saved-impact-text">{article.impact}</p>
           </div>
         )}
@@ -395,7 +395,7 @@ export default function SavedClient() {
           </>
         ) : articles.length === 0 ? (
           <div className="saved-empty">
-            <div className="saved-empty-icon">🔖</div>
+
             <h2 className="saved-empty-title">Nothing saved yet</h2>
             <p className="saved-empty-text">
               Bookmark articles from your feed to read them later.

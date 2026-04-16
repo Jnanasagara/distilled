@@ -268,7 +268,7 @@ function ArticleCard({
         )}
         {article.impact && (
           <div className="card-impact">
-            <span className="impact-label">💡 How this affects you</span>
+            <span className="impact-label">How this affects you</span>
             <p className="impact-text">{article.impact}</p>
           </div>
         )}
@@ -788,7 +788,7 @@ export default function FeedClient() {
 
       {showWelcome && (
         <div className="welcome-toast">
-          <div className="welcome-icon">👋</div>
+
           <div className="welcome-text">
             <div className="welcome-title">Welcome back, {welcomeName.split(" ")[0] || welcomeName}!</div>
             <div className="welcome-sub">Your feed is ready.</div>

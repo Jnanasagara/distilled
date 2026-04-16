@@ -57,14 +57,19 @@ export default function WelcomeModal() {
         {/* Steps */}
         <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 28 }}>
           {[
-            { icon: "🎯", title: "Your feed is personalized", desc: "Articles are ranked by topics you picked. The more you engage, the smarter it gets." },
-            { icon: "💡", title: "AI summaries on every card", desc: "Each article has a short summary and a 'how this affects you' insight below the title." },
-            { icon: "❓", title: "Why this post?", desc: "Tap the ? button on any card to see exactly why that article was shown to you." },
-            { icon: "📌", title: "Save articles for later", desc: "Tap the bookmark on any card. Find them all in your Saved tab." },
-            { icon: "📬", title: "Email digests", desc: "You'll get a digest of top articles based on your frequency preference (daily/weekly/monthly)." },
-          ].map((step) => (
+            { title: "Your feed is personalized", desc: "Articles are ranked by topics you picked. The more you engage, the smarter it gets." },
+            { title: "AI summaries on every card", desc: "Each article has a short summary and a plain-English explanation of how it affects you." },
+            { title: "Why this post?", desc: "Tap the ? button on any card to see exactly why that article was shown to you." },
+            { title: "Save articles for later", desc: "Tap the bookmark on any card. Find them all in your Saved tab." },
+            { title: "Email digests", desc: "You'll get a digest of top articles based on your frequency preference (daily/weekly/monthly)." },
+          ].map((step, i) => (
             <div key={step.title} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-              <span style={{ fontSize: 20, flexShrink: 0, marginTop: 2 }}>{step.icon}</span>
+              <span style={{
+                width: 22, height: 22, borderRadius: "50%", flexShrink: 0, marginTop: 1,
+                background: "var(--primary-light)", color: "var(--primary)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 11, fontWeight: 800,
+              }}>{i + 1}</span>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-heading)", marginBottom: 2 }}>
                   {step.title}
