@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import ThemeToggle from "./ThemeToggle";
@@ -59,6 +59,10 @@ export default function NavBar({ currentPage }: { currentPage: Page }) {
   const { data: session } = useSession();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [installReady, setInstallReady] = useState(false);
+  const [installIOS, setInstallIOS] = useState(false);
+  const [showIOSHint, setShowIOSHint] = useState(false);
+  const deferredInstall = useRef<Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> } | null>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -79,6 +83,23 @@ export default function NavBar({ currentPage }: { currentPage: Page }) {
     return () => { if (typeof document !== "undefined") document.body.style.overflow = ""; };
   }, [open]);
 
+  useEffect(() => {
+    const standalone = window.matchMedia("(display-mode: standalone)").matches ||
+      ("standalone" in navigator && (navigator as { standalone?: boolean }).standalone === true);
+    if (standalone) return;
+
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    if (isIOS) { setInstallIOS(true); setInstallReady(true); return; }
+
+    const handler = (e: Event) => {
+      e.preventDefault();
+      deferredInstall.current = e as typeof deferredInstall.current;
+      setInstallReady(true);
+    };
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
   function navigate(href: string) {
     setOpen(false);
     router.push(href);
@@ -87,6 +108,14 @@ export default function NavBar({ currentPage }: { currentPage: Page }) {
   function handleLogout() {
     setOpen(false);
     signOut({ callbackUrl: `${window.location.origin}/auth` });
+  }
+
+  async function handleInstall() {
+    if (installIOS) { setShowIOSHint((v) => !v); return; }
+    if (!deferredInstall.current) return;
+    await deferredInstall.current.prompt();
+    deferredInstall.current = null;
+    setInstallReady(false);
   }
 
   const name = session?.user?.name ?? session?.user?.email ?? "User";
@@ -254,6 +283,20 @@ export default function NavBar({ currentPage }: { currentPage: Page }) {
           transition: all 0.15s ease; width: 100%;
         }
         .drawer-logout:hover { background: #fef2f2; }
+        .drawer-install {
+          display: flex; align-items: center; gap: 10px;
+          padding: 10px 12px; border-radius: 6px;
+          border: none; background: transparent;
+          font-family: inherit; font-size: 14px; font-weight: 500;
+          color: var(--text-muted); cursor: pointer;
+          transition: all 0.15s ease; width: 100%; text-align: left;
+        }
+        .drawer-install:hover { background: var(--bg-elevated); color: var(--text-heading); }
+        .drawer-ios-hint {
+          margin: 0 8px 8px; padding: 10px 12px;
+          background: var(--bg-elevated); border-radius: 8px;
+          font-size: 12px; color: var(--text-muted); line-height: 1.55;
+        }
       `}</style>
 
       <nav className={`app-navbar ${scrolled ? "scrolled" : ""}`}>
@@ -342,6 +385,22 @@ export default function NavBar({ currentPage }: { currentPage: Page }) {
         </div>
 
         <div className="drawer-footer">
+          {installReady && (
+            <>
+              {showIOSHint && (
+                <div className="drawer-ios-hint">
+                  Tap <strong>Share</strong> then <strong>&ldquo;Add to Home Screen&rdquo;</strong>
+                </div>
+              )}
+              <button className="drawer-install" onClick={handleInstall}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                  <line x1="12" y1="18" x2="12.01" y2="18"/>
+                </svg>
+                Install app
+              </button>
+            </>
+          )}
           <button className="drawer-logout" onClick={handleLogout}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
