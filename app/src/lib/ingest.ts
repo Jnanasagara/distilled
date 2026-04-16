@@ -1,12 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { redis } from "@/lib/redis";
 import { fetchContentForTopic, FetchedItem, TimeFilter } from "@/lib/fetchers";
-import { summarizeContent } from "@/lib/summarize";
+import { summarizeContent, RateLimitError } from "@/lib/summarize";
 
-// Hard daily cap enforced via Redis — shared across ALL ingest job types
-// (fresh runs 4×/day + trending 1×/day + archive every 3 days = ~21+ calls without this).
-// Free tier: 20 RPD, 5 RPM. Cap at 16 to leave a safe buffer.
-const DAILY_GEMINI_CAP = 16;
+// Hard daily cap enforced via Redis — shared across ALL ingest job types.
+// Google Gemini free tier: 1500 RPD. Cap at 1000 to leave a buffer.
+const DAILY_GEMINI_CAP = 1000;
 
 // Atomically increment the daily Redis counter before each Gemini call.
 // Returns true if the call is allowed, false if daily cap is reached.
@@ -60,15 +59,29 @@ export async function ingestContentForTopic(
       });
 
       // Summarize only if: no summary yet AND global daily cap not reached.
-      // 13s delay keeps us safely under 5 RPM (4.6 RPM).
+      // 6s delay keeps us at ~10 RPM, safely under Gemini's 15 RPM free limit.
       if (!result.summary && await canCallGemini()) {
-        await new Promise((r) => setTimeout(r, 13000));
-        const ai = await summarizeContent(item.title, item.url);
-        if (ai) {
-          await prisma.content.update({
-            where: { id: result.id },
-            data: { summary: ai.summary, impact: ai.impact },
-          });
+        await new Promise((r) => setTimeout(r, 6000));
+        try {
+          const ai = await summarizeContent(item.title, item.url);
+          if (ai) {
+            await prisma.content.update({
+              where: { id: result.id },
+              data: { summary: ai.summary, impact: ai.impact },
+            });
+          }
+        } catch (err) {
+          if (err instanceof RateLimitError) {
+            // Provider rejected after all retries — no successful API call was
+            // processed, so return the slot to avoid burning the daily cap.
+            try {
+              const today = new Date().toISOString().slice(0, 10);
+              await redis.decr(`gemini:daily:${today}`);
+            } catch {
+              // Redis unavailable — accept the wasted slot rather than crash
+            }
+            console.warn("Gemini rate-limited after retries; slot returned to daily cap.");
+          }
         }
       }
 

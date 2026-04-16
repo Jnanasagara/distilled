@@ -1,32 +1,30 @@
-import OpenAI from "openai";
+import { GoogleGenAI } from "@google/genai";
 
 export interface SummarizeResult {
   summary: string;
   impact: string;
 }
 
-const client = new OpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY,
-  defaultHeaders: {
-    "HTTP-Referer": "https://distilled.blog",
-    "X-Title": "Distilled",
-  },
-});
+// Thrown when all retry attempts are exhausted with 429 — signals no API
+// call was successfully processed so the daily cap slot can be returned.
+export class RateLimitError extends Error {
+  constructor() {
+    super("rate_limited");
+    this.name = "RateLimitError";
+  }
+}
+
+const RETRY_DELAYS_MS = [10_000, 20_000]; // 10s then 20s before giving up
 
 export async function summarizeContent(
   title: string,
   url: string
 ): Promise<SummarizeResult | null> {
-  if (!process.env.OPENROUTER_API_KEY) return null;
+  if (!process.env.GEMINI_API_KEY) return null;
 
-  try {
-    const completion = await client.chat.completions.create({
-      model: "google/gemma-4-31b-it:free",
-      messages: [
-        {
-          role: "user",
-          content: `You are a content analyst for Distilled, a mindful news aggregator.
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+  const prompt = `You are a content analyst for Distilled, a mindful news aggregator.
 
 Given this article title and URL, provide two things as a JSON object:
 1. "summary": A concise 2-3 sentence neutral summary of what the article is likely about.
@@ -36,23 +34,50 @@ Respond ONLY with a valid JSON object. No extra text, no markdown, no code fence
 Example: {"summary": "...", "impact": "..."}
 
 Title: ${title}
-URL: ${url}`,
-        },
-      ],
-    });
+URL: ${url}`;
 
-    const text = completion.choices[0]?.message?.content?.trim() ?? "";
+  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
+    try {
+      const response = await ai.models.generateContent({
+        model: "gemini-2.0-flash",
+        contents: prompt,
+      });
 
-    // Strip markdown code fences if model wraps output anyway
-    const cleaned = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
+      const text = response.text?.trim() ?? "";
 
-    const parsed = JSON.parse(cleaned);
-    if (typeof parsed.summary === "string" && typeof parsed.impact === "string") {
-      return { summary: parsed.summary, impact: parsed.impact };
+      // Strip markdown code fences if model wraps output anyway
+      const cleaned = text
+        .replace(/^```(?:json)?\s*/i, "")
+        .replace(/\s*```$/, "")
+        .trim();
+
+      const parsed = JSON.parse(cleaned);
+      if (typeof parsed.summary === "string" && typeof parsed.impact === "string") {
+        return { summary: parsed.summary, impact: parsed.impact };
+      }
+      return null;
+    } catch (error: unknown) {
+      // Google API 429: status 429 or RESOURCE_EXHAUSTED in the message
+      const status = (error as { status?: number })?.status;
+      const message = (error as { message?: string })?.message ?? "";
+      const isRateLimit = status === 429 || message.includes("RESOURCE_EXHAUSTED") || message.includes("429");
+
+      if (isRateLimit && attempt < RETRY_DELAYS_MS.length) {
+        const delay = RETRY_DELAYS_MS[attempt];
+        console.warn(`Gemini 429 on attempt ${attempt + 1}, retrying in ${delay / 1000}s…`);
+        await new Promise((r) => setTimeout(r, delay));
+        continue;
+      }
+
+      if (isRateLimit) {
+        // All retries exhausted — no successful call was made
+        throw new RateLimitError();
+      }
+
+      console.error("Gemini summarization error:", error);
+      return null;
     }
-    return null;
-  } catch (error) {
-    console.error("OpenRouter summarization error:", error);
-    return null;
   }
+
+  return null;
 }
