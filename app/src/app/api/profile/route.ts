@@ -16,7 +16,7 @@ export async function GET() {
     fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 13);
     const fourteenDaysAgoStr = fourteenDaysAgo.toISOString().slice(0, 10);
 
-    const [user, stats, userTopics, recentInteractions, usageRecords, totalUsage] = await Promise.all([
+    const [user, stats, userTopics, usageRecords, totalUsage, recentInteractions] = await Promise.all([
       prisma.user.findUnique({
         where: { id: userId },
         select: { name: true, email: true, createdAt: true, avatarSeed: true },
