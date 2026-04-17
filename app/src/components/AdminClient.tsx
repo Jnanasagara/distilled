@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { signOut } from "next-auth/react";
 import ThemeToggle from "./ThemeToggle";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 type AdminUser = {
   id: string;
@@ -27,6 +28,22 @@ type Report = {
 };
 
 type ChangePwForm = { currentPassword: string; newPassword: string; confirmPassword: string };
+
+type AnalyticsData = {
+  totals: { users: number; content: number; interactions: number; active7d: number };
+  daily: { date: string; signups: number; interactions: number }[];
+  sources: { source: string; count: number }[];
+};
+
+type ContentItem = {
+  id: string;
+  title: string;
+  url: string;
+  source: string;
+  isHidden: boolean;
+  publishedAt: string | null;
+  topic: { name: string; emoji: string | null } | null;
+};
 
 export default function AdminClient({ mustChangePassword }: { mustChangePassword: boolean }) {
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -53,6 +70,18 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
   const [resolvingId, setResolvingId] = useState<string | null>(null);
   const [reportFilter, setReportFilter] = useState<"ALL" | "OPEN" | "RESOLVED">("OPEN");
 
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(true);
+
+  const [contentItems, setContentItems] = useState<ContentItem[]>([]);
+  const [contentTotal, setContentTotal] = useState(0);
+  const [contentLoading, setContentLoading] = useState(true);
+  const [contentSearch, setContentSearch] = useState("");
+  const [contentFilter, setContentFilter] = useState<"all" | "hidden" | "visible">("all");
+  const [contentPage, setContentPage] = useState(1);
+  const [hidingId, setHidingId] = useState<string | null>(null);
+  const CONTENT_PAGE_SIZE = 30;
+
   const pwRules = [
     { label: "At least 8 characters", met: pwForm.newPassword.length >= 8 },
     { label: "One uppercase letter", met: /[A-Z]/.test(pwForm.newPassword) },
@@ -75,6 +104,24 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
       .catch(() => setReportsLoading(false));
   }, []);
 
+  useEffect(() => {
+    setAnalyticsLoading(true);
+    fetch("/api/admin/analytics")
+      .then((r) => r.json())
+      .then((d) => { setAnalytics(d); setAnalyticsLoading(false); })
+      .catch(() => setAnalyticsLoading(false));
+  }, []);
+
+  useEffect(() => {
+    setContentLoading(true);
+    const params = new URLSearchParams({ page: String(contentPage), filter: contentFilter });
+    if (contentSearch) params.set("q", contentSearch);
+    fetch(`/api/admin/content?${params}`)
+      .then((r) => r.json())
+      .then((d) => { setContentItems(d.items ?? []); setContentTotal(d.total ?? 0); setContentLoading(false); })
+      .catch(() => setContentLoading(false));
+  }, [contentPage, contentFilter, contentSearch]);
+
   async function handleResolve(reportId: string) {
     setResolvingId(reportId);
     try {
@@ -84,6 +131,19 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
       }
     } finally {
       setResolvingId(null);
+    }
+  }
+
+  async function handleToggleHide(itemId: string) {
+    setHidingId(itemId);
+    try {
+      const res = await fetch(`/api/admin/content/${itemId}/hide`, { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        setContentItems((prev) => prev.map((c) => c.id === itemId ? { ...c, isHidden: data.isHidden } : c));
+      }
+    } finally {
+      setHidingId(null);
     }
   }
 
@@ -402,8 +462,46 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
         .pw-spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        /* Analytics */
+        .adm-analytics-totals { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 24px; }
+        .adm-atotal { background: var(--bg-elevated); border-radius: 12px; padding: 14px 16px; }
+        .adm-atotal-val { font-size: 24px; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
+        .adm-atotal-lbl { font-size: 11px; color: var(--text-subtle); margin-top: 2px; font-weight: 500; }
+        .adm-chart-title { font-size: 13px; font-weight: 600; color: var(--text-heading); margin-bottom: 12px; }
+        .adm-chart-wrap { height: 200px; margin-bottom: 24px; }
+        .adm-sources-list { display: flex; flex-direction: column; gap: 8px; }
+        .adm-source-row { display: flex; align-items: center; gap: 10px; }
+        .adm-source-label { font-size: 12px; font-weight: 600; color: var(--text-muted); width: 90px; flex-shrink: 0; }
+        .adm-source-bar-wrap { flex: 1; height: 8px; background: var(--bg-elevated); border-radius: 999px; overflow: hidden; }
+        .adm-source-bar { height: 100%; background: var(--primary); border-radius: 999px; transition: width 0.6s ease; }
+        .adm-source-count { font-size: 12px; font-weight: 700; color: var(--text-subtle); width: 40px; text-align: right; flex-shrink: 0; }
+
+        /* Content moderation */
+        .adm-cm-filters { display: flex; gap: 6px; flex-wrap: wrap; }
+        .adm-cm-filter { padding: 6px 14px; border-radius: 999px; border: 1.5px solid var(--border-default); background: var(--bg-card); font-family: inherit; font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
+        .adm-cm-filter:hover { border-color: var(--primary); color: var(--primary); }
+        .adm-cm-filter.active { background: var(--primary); border-color: var(--primary); color: white; }
+        .adm-cm-list { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+        .adm-cm-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--border-default); transition: all 0.2s; }
+        .adm-cm-item.hidden { opacity: 0.6; background: var(--bg-elevated); }
+        .adm-cm-info { flex: 1; min-width: 0; }
+        .adm-cm-title { font-size: 13px; font-weight: 600; color: var(--text-heading); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-decoration: none; }
+        .adm-cm-title:hover { color: var(--primary); }
+        .adm-cm-meta { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+        .adm-cm-source { font-size: 10px; font-weight: 700; color: white; padding: 2px 8px; border-radius: 999px; background: #888; }
+        .adm-cm-topic { font-size: 11px; color: var(--primary); font-weight: 600; }
+        .adm-cm-date { font-size: 11px; color: var(--text-subtle); }
+        .adm-hide-btn { flex-shrink: 0; padding: 6px 12px; border-radius: 8px; border: 1.5px solid; font-family: inherit; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+        .adm-hide-btn.hide { border-color: #fca5a5; color: #dc2626; background: transparent; }
+        .adm-hide-btn.hide:hover { background: #fee2e2; }
+        .adm-hide-btn.unhide { border-color: #86efac; color: #16a34a; background: transparent; }
+        .adm-hide-btn.unhide:hover { background: #dcfce7; }
+        .adm-hide-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .chip-hidden { background: #fee2e2; color: #dc2626; }
+
         @media (max-width: 768px) {
           .adm-stats { grid-template-columns: repeat(2, 1fr); }
+          .adm-analytics-totals { grid-template-columns: repeat(2, 1fr); }
           .adm-navbar-inner { padding: 12px 16px; }
           .adm-container { padding: 16px 16px 60px; }
           .adm-search { width: 100%; }
@@ -471,6 +569,152 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
             </div>
           </div>
         )}
+
+        {/* Analytics */}
+        <div className="adm-card">
+          <div className="adm-card-header">
+            <div>
+              <div className="adm-card-title">Analytics</div>
+              <div className="adm-card-subtitle">30-day activity overview</div>
+            </div>
+          </div>
+          {analyticsLoading ? (
+            <div className="adm-empty">Loading analytics...</div>
+          ) : analytics ? (
+            <>
+              <div className="adm-analytics-totals">
+                <div className="adm-atotal">
+                  <div className="adm-atotal-val">{analytics.totals.users}</div>
+                  <div className="adm-atotal-lbl">Total users</div>
+                </div>
+                <div className="adm-atotal">
+                  <div className="adm-atotal-val">{analytics.totals.active7d}</div>
+                  <div className="adm-atotal-lbl">Active (7d)</div>
+                </div>
+                <div className="adm-atotal">
+                  <div className="adm-atotal-val">{analytics.totals.content.toLocaleString()}</div>
+                  <div className="adm-atotal-lbl">Articles</div>
+                </div>
+                <div className="adm-atotal">
+                  <div className="adm-atotal-val">{analytics.totals.interactions.toLocaleString()}</div>
+                  <div className="adm-atotal-lbl">Interactions</div>
+                </div>
+              </div>
+              <div className="adm-chart-title">Daily Interactions (last 30 days)</div>
+              <div className="adm-chart-wrap">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={analytics.daily} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border-divider)" />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fontSize: 10, fill: "var(--text-subtle)" }}
+                      tickLine={false}
+                      axisLine={false}
+                      interval={6}
+                      tickFormatter={(v) => new Date(v).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                    />
+                    <YAxis tick={{ fontSize: 10, fill: "var(--text-subtle)" }} tickLine={false} axisLine={false} />
+                    <Tooltip
+                      contentStyle={{ background: "var(--bg-card)", border: "1px solid var(--border-default)", borderRadius: 10, fontSize: 12 }}
+                      labelFormatter={(v) => new Date(v).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                    />
+                    <Bar dataKey="interactions" fill="var(--primary)" radius={[3, 3, 0, 0]} name="Interactions" />
+                    <Bar dataKey="signups" fill="var(--primary-light, #c7d2fe)" radius={[3, 3, 0, 0]} name="Signups" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              {analytics.sources.length > 0 && (
+                <>
+                  <div className="adm-chart-title">Content by Source</div>
+                  <div className="adm-sources-list">
+                    {analytics.sources.map((s) => {
+                      const max = analytics.sources[0].count;
+                      return (
+                        <div key={s.source} className="adm-source-row">
+                          <span className="adm-source-label">{s.source}</span>
+                          <div className="adm-source-bar-wrap">
+                            <div className="adm-source-bar" style={{ width: `${(s.count / max) * 100}%` }} />
+                          </div>
+                          <span className="adm-source-count">{s.count.toLocaleString()}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </>
+          ) : (
+            <div className="adm-empty">Failed to load analytics.</div>
+          )}
+        </div>
+
+        {/* Content Moderation */}
+        <div className="adm-card">
+          <div className="adm-card-header">
+            <div>
+              <div className="adm-card-title">Content Moderation</div>
+              <div className="adm-card-subtitle">Hide or restore articles from user feeds</div>
+            </div>
+            <input
+              className="adm-search"
+              placeholder="Search articles..."
+              value={contentSearch}
+              onChange={(e) => { setContentSearch(e.target.value); setContentPage(1); }}
+            />
+          </div>
+          <div className="adm-cm-filters">
+            {(["all", "visible", "hidden"] as const).map((f) => (
+              <button
+                key={f}
+                className={`adm-cm-filter ${contentFilter === f ? "active" : ""}`}
+                onClick={() => { setContentFilter(f); setContentPage(1); }}
+              >
+                {f.charAt(0).toUpperCase() + f.slice(1)}
+              </button>
+            ))}
+          </div>
+          {contentLoading ? (
+            <div className="adm-empty">Loading content...</div>
+          ) : contentItems.length === 0 ? (
+            <div className="adm-empty">No articles found.</div>
+          ) : (
+            <div className="adm-cm-list">
+              {contentItems.map((item) => (
+                <div key={item.id} className={`adm-cm-item ${item.isHidden ? "hidden" : ""}`}>
+                  <div className="adm-cm-info">
+                    <a href={item.url} target="_blank" rel="noopener noreferrer" className="adm-cm-title">
+                      {item.title}
+                    </a>
+                    <div className="adm-cm-meta">
+                      <span className="adm-cm-source">{item.source}</span>
+                      {item.topic && <span className="adm-cm-topic">{item.topic.emoji} {item.topic.name}</span>}
+                      {item.publishedAt && (
+                        <span className="adm-cm-date">
+                          {new Date(item.publishedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        </span>
+                      )}
+                      {item.isHidden && <span className="adm-chip chip-hidden" style={{ fontSize: 10, padding: "2px 8px" }}>Hidden</span>}
+                    </div>
+                  </div>
+                  <button
+                    className={`adm-hide-btn ${item.isHidden ? "unhide" : "hide"}`}
+                    disabled={hidingId === item.id}
+                    onClick={() => handleToggleHide(item.id)}
+                  >
+                    {hidingId === item.id ? "..." : item.isHidden ? "Unhide" : "Hide"}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          {contentTotal > CONTENT_PAGE_SIZE && (
+            <div className="adm-pagination">
+              <span>{(contentPage - 1) * CONTENT_PAGE_SIZE + 1}–{Math.min(contentPage * CONTENT_PAGE_SIZE, contentTotal)} of {contentTotal}</span>
+              <button className="adm-page-btn" disabled={contentPage === 1} onClick={() => setContentPage((p) => p - 1)}>← Prev</button>
+              <button className="adm-page-btn" disabled={contentPage * CONTENT_PAGE_SIZE >= contentTotal} onClick={() => setContentPage((p) => p + 1)}>Next →</button>
+            </div>
+          )}
+        </div>
 
         {/* Users table — always visible */}
         <div className="adm-card">

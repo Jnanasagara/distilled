@@ -75,6 +75,17 @@ export default function ProfileClient() {
   const [reportError, setReportError] = useState("");
   const [reportSuccess, setReportSuccess] = useState(false);
 
+  const [pushSupported, setPushSupported] = useState(false);
+  const [pushSubscribed, setPushSubscribed] = useState(false);
+  const [pushLoading, setPushLoading] = useState(false);
+  const [pushError, setPushError] = useState("");
+
+  const [showDeleteZone, setShowDeleteZone] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+
   async function handleReport(e: React.FormEvent) {
     e.preventDefault();
     setReportError(""); setReportSuccess(false);
@@ -143,6 +154,68 @@ export default function ProfileClient() {
       .then((d) => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window) {
+      setPushSupported(true);
+      fetch("/api/user/push-subscription")
+        .then((r) => r.json())
+        .then((d) => setPushSubscribed(d.subscribed ?? false))
+        .catch(() => {});
+    }
+  }, []);
+
+  async function handlePushToggle() {
+    setPushLoading(true);
+    setPushError("");
+    try {
+      if (pushSubscribed) {
+        const reg = await navigator.serviceWorker.ready;
+        const sub = await reg.pushManager.getSubscription();
+        if (sub) await sub.unsubscribe();
+        await fetch("/api/user/push-subscription", { method: "DELETE" });
+        setPushSubscribed(false);
+      } else {
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") { setPushError("Permission denied. Enable notifications in browser settings."); return; }
+        const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+        if (!vapidKey) { setPushError("Push notifications are not configured yet."); return; }
+        const reg = await navigator.serviceWorker.ready;
+        const sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: vapidKey,
+        });
+        const json = sub.toJSON();
+        await fetch("/api/user/push-subscription", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ endpoint: json.endpoint, p256dh: json.keys?.p256dh, auth: json.keys?.auth }),
+        });
+        setPushSubscribed(true);
+      }
+    } catch (e: any) {
+      setPushError(e?.message ?? "Something went wrong.");
+    } finally {
+      setPushLoading(false);
+    }
+  }
+
+  async function handleDeleteAccount() {
+    if (deleteConfirm !== "DELETE") { setDeleteError('Type "DELETE" to confirm.'); return; }
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      const res = await fetch("/api/user/delete", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: deletePassword || undefined }),
+      });
+      const d = await res.json();
+      if (!res.ok) { setDeleteError(d.error ?? "Failed to delete account."); }
+      else { window.location.href = "/auth?deleted=1"; }
+    } catch { setDeleteError("Network error. Please try again."); }
+    finally { setDeleting(false); }
+  }
 
   return (
     <>
@@ -374,6 +447,65 @@ export default function ProfileClient() {
           background-size: 200% 100%; animation: shimmer 1.5s ease infinite; border-radius: 8px;
         }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        /* Push notification toggle */
+        .prof-push-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+        .prof-push-info { flex: 1; }
+        .prof-push-title { font-size: 14px; font-weight: 600; color: var(--text-heading); margin-bottom: 3px; }
+        .prof-push-desc { font-size: 12px; color: var(--text-subtle); line-height: 1.5; }
+        .prof-push-toggle {
+          position: relative; width: 46px; height: 26px; flex-shrink: 0;
+          background: var(--border-default); border-radius: 999px;
+          border: none; cursor: pointer; transition: background 0.2s;
+        }
+        .prof-push-toggle.on { background: var(--primary); }
+        .prof-push-toggle:disabled { opacity: 0.5; cursor: not-allowed; }
+        .prof-push-knob {
+          position: absolute; top: 3px; left: 3px;
+          width: 20px; height: 20px; border-radius: 50%; background: white;
+          transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .prof-push-toggle.on .prof-push-knob { transform: translateX(20px); }
+        .prof-push-error { font-size: 12px; color: var(--text-error); margin-top: 8px; }
+
+        /* Danger zone */
+        .prof-danger-zone {
+          background: var(--bg-card); border-radius: 12px;
+          border: 1.5px solid #fca5a5;
+          padding: 24px; box-shadow: var(--shadow-sm);
+        }
+        .prof-danger-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+        .prof-danger-title { font-size: 15px; font-weight: 700; color: #dc2626; }
+        .prof-danger-desc { font-size: 13px; color: var(--text-subtle); margin-top: 3px; }
+        .prof-danger-toggle {
+          padding: 8px 16px; border-radius: 10px;
+          border: 1.5px solid #fca5a5; background: transparent;
+          font-family: inherit; font-size: 13px; font-weight: 600;
+          color: #dc2626; cursor: pointer; transition: all 0.2s; white-space: nowrap;
+        }
+        .prof-danger-toggle:hover { background: #fee2e2; }
+        .prof-danger-form { margin-top: 20px; display: flex; flex-direction: column; gap: 12px; max-width: 400px; }
+        .prof-danger-input {
+          width: 100%; padding: 12px 14px;
+          border: 1.5px solid var(--border-default); border-radius: 10px;
+          font-family: inherit; font-size: 14px; color: var(--text-heading);
+          background: var(--bg-input); outline: none; transition: border-color 0.2s;
+        }
+        .prof-danger-input::placeholder { color: var(--text-subtle); }
+        .prof-danger-input:focus { border-color: #dc2626; box-shadow: 0 0 0 3px #fee2e2; }
+        .prof-danger-submit {
+          padding: 12px 22px; border: none; border-radius: 10px;
+          background: #dc2626; color: white;
+          font-family: inherit; font-size: 14px; font-weight: 700;
+          cursor: pointer; transition: background 0.2s; width: fit-content;
+        }
+        .prof-danger-submit:hover { background: #b91c1c; }
+        .prof-danger-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+        .prof-danger-error { font-size: 13px; color: #dc2626; background: #fee2e2; padding: 10px 14px; border-radius: 10px; font-weight: 500; }
+        .prof-danger-warn { font-size: 12px; color: var(--text-subtle); line-height: 1.6; background: var(--bg-elevated); padding: 12px 14px; border-radius: 10px; }
+        .prof-danger-warn strong { color: var(--text-heading); }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         @media (max-width: 640px) {
           .prof-hero { flex-direction: column; text-align: center; }
@@ -698,6 +830,33 @@ export default function ProfileClient() {
               )}
             </div>
 
+            {/* Push Notifications */}
+            {pushSupported && (
+              <div className="prof-card">
+                <div className="prof-card-title">Notifications</div>
+                <div className="prof-card-desc" style={{ marginBottom: 16 }}>Get notified about new articles matching your interests.</div>
+                <div className="prof-push-row">
+                  <div className="prof-push-info">
+                    <div className="prof-push-title">{pushSubscribed ? "Push notifications enabled" : "Push notifications disabled"}</div>
+                    <div className="prof-push-desc">
+                      {pushSubscribed
+                        ? "You will receive push notifications when new content arrives."
+                        : "Enable push notifications to get alerts for new articles."}
+                    </div>
+                  </div>
+                  <button
+                    className={`prof-push-toggle ${pushSubscribed ? "on" : ""}`}
+                    disabled={pushLoading}
+                    onClick={handlePushToggle}
+                    aria-label={pushSubscribed ? "Disable notifications" : "Enable notifications"}
+                  >
+                    <span className="prof-push-knob" />
+                  </button>
+                </div>
+                {pushError && <div className="prof-push-error">{pushError}</div>}
+              </div>
+            )}
+
             {/* Topic interest bar chart */}
             <div className="prof-card">
               <div className="prof-card-title">Your Interests</div>
@@ -783,6 +942,53 @@ export default function ProfileClient() {
                     ))}
                   </LineChart>
                 </ResponsiveContainer>
+              )}
+            </div>
+            {/* Danger Zone */}
+            <div className="prof-danger-zone">
+              <div className="prof-danger-header">
+                <div>
+                  <div className="prof-danger-title">Delete Account</div>
+                  <div className="prof-danger-desc">Permanently remove your account and all data. This cannot be undone.</div>
+                </div>
+                <button
+                  className="prof-danger-toggle"
+                  onClick={() => { setShowDeleteZone((v) => !v); setDeleteError(""); setDeleteConfirm(""); setDeletePassword(""); }}
+                >
+                  {showDeleteZone ? "Cancel" : "Delete account"}
+                </button>
+              </div>
+
+              {showDeleteZone && (
+                <div className="prof-danger-form">
+                  <div className="prof-danger-warn">
+                    <strong>This will permanently delete:</strong> your profile, preferences, reading history, saved articles, and collections. This action <strong>cannot be undone</strong>.
+                  </div>
+                  <input
+                    className="prof-danger-input"
+                    type="password"
+                    placeholder="Your current password (if you have one)"
+                    value={deletePassword}
+                    onChange={(e) => setDeletePassword(e.target.value)}
+                    autoComplete="current-password"
+                  />
+                  <input
+                    className="prof-danger-input"
+                    type="text"
+                    placeholder='Type "DELETE" to confirm'
+                    value={deleteConfirm}
+                    onChange={(e) => setDeleteConfirm(e.target.value)}
+                    autoComplete="off"
+                  />
+                  {deleteError && <div className="prof-danger-error">{deleteError}</div>}
+                  <button
+                    className="prof-danger-submit"
+                    disabled={deleting || deleteConfirm !== "DELETE"}
+                    onClick={handleDeleteAccount}
+                  >
+                    {deleting ? "Deleting..." : "Permanently delete account"}
+                  </button>
+                </div>
               )}
             </div>
           </>

@@ -86,11 +86,12 @@ export async function GET() {
     const excludedSet = new Set(excludedInteractions.map((i) => i.contentId));
     const blockedSourceSet = new Set(blockedSources.map((b) => b.source));
 
-    // Fetch candidate articles — exclude already clicked/dismissed and blocked sources
+    // Fetch candidate articles — exclude already clicked/dismissed, blocked sources, and hidden content
     const rawArticles = await prisma.content.findMany({
       where: {
         topicId: { in: topicIds },
         id: { notIn: Array.from(excludedSet) },
+        isHidden: false,
         ...(blockedSourceSet.size > 0 ? { source: { notIn: Array.from(blockedSourceSet) } } : {}),
       },
       orderBy: { publishedAt: "desc" },

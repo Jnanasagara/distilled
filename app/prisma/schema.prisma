@@ -22,14 +22,17 @@ model User {
   mustChangePassword  Boolean   @default(false)
   avatarSeed          String?
 
-  accounts       Account[]
-  sessions       Session[]
-  preferences    UserPreference?
-  userTopics     UserTopic[]
-  interactions   Interaction[]
-  reports        Report[]
-  dailyUsage     DailyUsage[]
-  blockedSources BlockedSource[]
+  accounts          Account[]
+  sessions          Session[]
+  preferences       UserPreference?
+  userTopics        UserTopic[]
+  interactions      Interaction[]
+  reports           Report[]
+  dailyUsage        DailyUsage[]
+  blockedSources    BlockedSource[]
+  rssSources        UserRssSource[]
+  collections       Collection[]
+  pushSubscriptions PushSubscription[]
 }
 
 model BlockedSource {
@@ -107,14 +110,15 @@ enum UserRole {
 }
 
 model Topic {
-  id          String      @id @default(uuid())
-  slug        String      @unique
+  id          String          @id @default(uuid())
+  slug        String          @unique
   name        String
   description String?
   emoji       String?
   userTopics  UserTopic[]
   contents    Content[]
-  createdAt   DateTime    @default(now())
+  rssSources  UserRssSource[]
+  createdAt   DateTime        @default(now())
 }
 
 model UserTopic {
@@ -174,7 +178,10 @@ model Content {
   publishedAt DateTime?
   fetchedAt   DateTime @default(now())
   createdAt   DateTime @default(now())
-  interactions Interaction[]
+  isHidden    Boolean  @default(false)
+
+  interactions    Interaction[]
+  collectionItems CollectionItem[]
 
   topic Topic? @relation(fields: [topicId], references: [id])
 }
@@ -214,4 +221,53 @@ model Report {
 enum ReportStatus {
   OPEN
   RESOLVED
+}
+
+model UserRssSource {
+  id        String   @id @default(uuid())
+  userId    String
+  url       String
+  name      String?
+  topicId   String?
+  createdAt DateTime @default(now())
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic Topic? @relation(fields: [topicId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, url])
+}
+
+model Collection {
+  id        String           @id @default(uuid())
+  userId    String
+  name      String
+  color     String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  user  User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items CollectionItem[]
+}
+
+model CollectionItem {
+  id           String   @id @default(uuid())
+  collectionId String
+  contentId    String
+  createdAt    DateTime @default(now())
+
+  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  content    Content    @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@unique([collectionId, contentId])
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

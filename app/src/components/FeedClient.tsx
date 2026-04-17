@@ -122,6 +122,12 @@ function timeAgo(dateStr: string | null): string {
   return `${Math.floor(days / 7)}w ago`;
 }
 
+function readingTime(title: string, summary: string | null): string {
+  const words = ((title ?? "") + " " + (summary ?? "")).trim().split(/\s+/).length;
+  const mins = Math.max(1, Math.ceil(words / 200));
+  return `${mins} min read`;
+}
+
 function SkeletonCard() {
   return (
     <div className="skeleton-card">
@@ -298,6 +304,8 @@ function ArticleCard({
             {article.author && <span className="meta-author">{article.author}</span>}
             {article.author && article.publishedAt && " · "}
             {article.publishedAt && <span className="meta-time">{timeAgo(article.publishedAt)}</span>}
+            {(article.author || article.publishedAt) && " · "}
+            <span className="meta-read-time">{readingTime(article.title, article.summary)}</span>
           </span>
         </div>
 
@@ -404,6 +412,7 @@ export default function FeedClient() {
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeName, setWelcomeName] = useState("");
   const [showScreenNudge, setShowScreenNudge] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     fetch("/api/feed")
@@ -523,6 +532,19 @@ export default function FeedClient() {
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    try {
+      await fetch("/api/feed/refresh", { method: "POST" });
+      const data = await fetch("/api/feed").then((r) => r.json());
+      setFeed(data);
+      setPage(1);
+      setFilter("all");
+      setSearch("");
+    } catch {}
+    setRefreshing(false);
+  }
 
   function handleFilterChange(s: string) {
     setFilter(s);
@@ -808,6 +830,22 @@ export default function FeedClient() {
         }
         .search-empty strong { color: var(--text-muted); display: block; font-size: 16px; font-weight: 700; margin-bottom: 4px; }
 
+        /* ===== REFRESH BUTTON ===== */
+        .feed-refresh-btn {
+          display: flex; align-items: center; gap: 6px;
+          padding: 8px 16px; border-radius: 10px;
+          border: 1.5px solid var(--border-default); background: var(--bg-card);
+          font-family: inherit; font-size: 13px; font-weight: 600;
+          color: var(--text-muted); cursor: pointer; transition: all 0.2s ease;
+        }
+        .feed-refresh-btn:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); background: var(--bg-accent); }
+        .feed-refresh-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .feed-refresh-btn.refreshing .refresh-icon { animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Reading time */
+        .meta-read-time { color: var(--text-subtle); font-size: 11px; }
+
         /* ===== RESPONSIVE ===== */
         @media (max-width: 640px) {
           .feed-container { padding: 16px 16px 60px; }
@@ -924,8 +962,20 @@ export default function FeedClient() {
           </div>
         ) : (
           <>
-            <div className="feed-hero">
+            <div className="feed-hero" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
               <h1 className="feed-greeting">Your Feed</h1>
+              <button
+                className={`feed-refresh-btn ${refreshing ? "refreshing" : ""}`}
+                onClick={handleRefresh}
+                disabled={refreshing}
+                title="Refresh feed"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className="refresh-icon">
+                  <polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" />
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                </svg>
+                {refreshing ? "Refreshing…" : "Refresh"}
+              </button>
             </div>
 
             <div className="feed-search-wrap">

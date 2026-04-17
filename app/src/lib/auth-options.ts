@@ -35,7 +35,7 @@ export const authOptions: NextAuthOptions = {
   ],
   session: {
     strategy: "jwt",
-    maxAge: 7 * 24 * 60 * 60, // 7 days (default is 30 — shorter window limits exposure)
+    maxAge: 7 * 24 * 60 * 60,
   },
   cookies: {
     sessionToken: {
@@ -59,17 +59,14 @@ export const authOptions: NextAuthOptions = {
         token.onboarded = (user as any).onboarded;
         const isAdmin = (user as any).role === "ADMIN";
         const rememberMe = !isAdmin && (user as any).rememberMe !== false;
-        // Admins always get 1 day. Regular users: 30 days if remembered, 1 day if not.
         token.exp = Math.floor(Date.now() / 1000) + (rememberMe ? 365 * 24 * 60 * 60 : 24 * 60 * 60);
       }
-      // Re-fetch user on every session check to catch bans and role changes
       if (token.id && trigger !== "signIn") {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
           select: { isBanned: true, role: true, mustChangePassword: true, onboarded: true, avatarSeed: true },
         });
         if (!dbUser || dbUser.isBanned) {
-          // Invalidate token for banned/deleted users
           return { ...token, banned: true };
         }
         token.role = dbUser.role;
@@ -79,9 +76,9 @@ export const authOptions: NextAuthOptions = {
       }
       return token;
     },
+
     async session({ session, token }) {
       if ((token as any).banned) {
-        // Return empty session to force logout
         return { ...session, user: undefined as any };
       }
       if (session.user) {

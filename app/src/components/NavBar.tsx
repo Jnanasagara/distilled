@@ -6,7 +6,7 @@ import { useSession, signOut } from "next-auth/react";
 import ThemeToggle from "./ThemeToggle";
 import { avatarUrl } from "@/lib/avatars";
 
-type Page = "feed" | "saved" | "profile" | "preferences";
+type Page = "feed" | "saved" | "history" | "profile" | "preferences";
 
 const NAV_ITEMS: { page: Page; label: string; href: string; icon: React.ReactNode }[] = [
   {
@@ -27,6 +27,17 @@ const NAV_ITEMS: { page: Page; label: string; href: string; icon: React.ReactNod
     icon: (
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+      </svg>
+    ),
+  },
+  {
+    page: "history",
+    label: "History",
+    href: "/history",
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="12 8 12 12 14 14" />
+        <path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5" />
       </svg>
     ),
   },

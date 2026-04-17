@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
 
@@ -59,6 +59,15 @@ export default function PreferencesForm({
   const [resetDone, setResetDone] = useState(false);
   const [error, setError] = useState("");
 
+  type RssSource = { id: string; name: string; url: string; topicId: string | null };
+  const [rssSources, setRssSources] = useState<RssSource[]>([]);
+  const [rssUrl, setRssUrl] = useState("");
+  const [rssName, setRssName] = useState("");
+  const [rssTopicId, setRssTopicId] = useState("");
+  const [rssAdding, setRssAdding] = useState(false);
+  const [rssError, setRssError] = useState("");
+  const [removingRssId, setRemovingRssId] = useState<string | null>(null);
+
   const maxPosts = frequency === "MONTHLY" ? 100 : frequency === "WEEKLY" ? 60 : 30;
 
   function toggleTopic(id: string) {
@@ -110,6 +119,40 @@ export default function PreferencesForm({
     } catch {
       togglePause(topicId);
     }
+  }
+
+  useEffect(() => {
+    if (mode !== "preferences") return;
+    fetch("/api/user/rss-sources")
+      .then((r) => r.json())
+      .then((d) => setRssSources(d.sources ?? []))
+      .catch(() => {});
+  }, [mode]);
+
+  async function handleAddRss(e: React.FormEvent) {
+    e.preventDefault();
+    setRssError("");
+    if (!rssUrl.trim()) { setRssError("Enter a feed URL."); return; }
+    setRssAdding(true);
+    try {
+      const res = await fetch("/api/user/rss-sources", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: rssUrl.trim(), name: rssName.trim() || undefined, topicId: rssTopicId || undefined }),
+      });
+      const d = await res.json();
+      if (!res.ok) { setRssError(d.error ?? "Failed to add source."); }
+      else { setRssSources((prev) => [...prev, d.source]); setRssUrl(""); setRssName(""); setRssTopicId(""); }
+    } catch { setRssError("Network error. Please try again."); }
+    finally { setRssAdding(false); }
+  }
+
+  async function handleRemoveRss(id: string) {
+    setRemovingRssId(id);
+    try {
+      await fetch(`/api/user/rss-sources?id=${id}`, { method: "DELETE" });
+      setRssSources((prev) => prev.filter((s) => s.id !== id));
+    } finally { setRemovingRssId(null); }
   }
 
   async function handleToggleBlockedSource(source: string) {
@@ -373,6 +416,26 @@ export default function PreferencesForm({
         .source-block-chip.blocked:hover { opacity: 1; border-color: var(--border-default); background: var(--bg-card); color: var(--text-body); text-decoration: none; }
         .source-block-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
+        /* RSS sources */
+        .rss-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+        .rss-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; border-radius: 10px; background: var(--bg-elevated); border: 1.5px solid var(--border-divider); }
+        .rss-item-info { flex: 1; min-width: 0; }
+        .rss-item-name { font-size: 13px; font-weight: 600; color: var(--text-heading); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .rss-item-url { font-size: 11px; color: var(--text-subtle); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .rss-remove-btn { flex-shrink: 0; padding: 4px 10px; border-radius: 8px; border: 1.5px solid #fca5a5; color: #dc2626; background: transparent; font-family: inherit; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+        .rss-remove-btn:hover { background: #fee2e2; }
+        .rss-remove-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .rss-form { display: flex; flex-direction: column; gap: 8px; }
+        .rss-input { width: 100%; padding: 10px 14px; border: 1.5px solid var(--border-default); border-radius: 10px; font-family: inherit; font-size: 13px; color: var(--text-heading); background: var(--bg-input); outline: none; transition: border-color 0.2s; }
+        .rss-input::placeholder { color: var(--text-subtle); }
+        .rss-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+        .rss-select { width: 100%; padding: 10px 14px; border: 1.5px solid var(--border-default); border-radius: 10px; font-family: inherit; font-size: 13px; color: var(--text-heading); background: var(--bg-input); outline: none; transition: border-color 0.2s; cursor: pointer; }
+        .rss-select:focus { border-color: var(--primary); }
+        .rss-add-btn { align-self: flex-start; padding: 9px 18px; border: none; border-radius: 10px; background: var(--primary); color: white; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+        .rss-add-btn:hover { background: var(--btn-dark-hover); }
+        .rss-add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .rss-error { font-size: 12px; color: var(--text-error); background: var(--bg-error); padding: 8px 12px; border-radius: 8px; }
+
         /* Error & Submit */
         .error-msg {
           color: var(--text-error); font-size: 13px; text-align: center;
@@ -532,6 +595,69 @@ export default function PreferencesForm({
                 <span className="toggle-track" />
               </label>
             </div>
+          </div>
+        )}
+
+        {mode === "preferences" && (
+          <div className="section">
+            <h2 className="section-title">Custom RSS Feeds</h2>
+            <p className="section-desc">
+              Add your own RSS/Atom feeds. Articles will be fetched and included in your feed.
+              Maximum 20 sources.
+            </p>
+            {rssSources.length > 0 && (
+              <div className="rss-list">
+                {rssSources.map((s) => (
+                  <div key={s.id} className="rss-item">
+                    <div className="rss-item-info">
+                      <div className="rss-item-name">{s.name || "Unnamed feed"}</div>
+                      <div className="rss-item-url">{s.url}</div>
+                    </div>
+                    <button
+                      className="rss-remove-btn"
+                      disabled={removingRssId === s.id}
+                      onClick={() => handleRemoveRss(s.id)}
+                    >
+                      {removingRssId === s.id ? "..." : "Remove"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {rssSources.length < 20 && (
+              <form className="rss-form" onSubmit={handleAddRss}>
+                <input
+                  className="rss-input"
+                  type="url"
+                  placeholder="Feed URL (https://example.com/feed.xml)"
+                  value={rssUrl}
+                  onChange={(e) => setRssUrl(e.target.value)}
+                  required
+                />
+                <input
+                  className="rss-input"
+                  type="text"
+                  placeholder="Display name (optional)"
+                  value={rssName}
+                  onChange={(e) => setRssName(e.target.value)}
+                  maxLength={80}
+                />
+                <select
+                  className="rss-select"
+                  value={rssTopicId}
+                  onChange={(e) => setRssTopicId(e.target.value)}
+                >
+                  <option value="">No topic (unclassified)</option>
+                  {topics.map((t) => (
+                    <option key={t.id} value={t.id}>{t.emoji ? `${t.emoji} ` : ""}{t.name}</option>
+                  ))}
+                </select>
+                {rssError && <div className="rss-error">{rssError}</div>}
+                <button type="submit" className="rss-add-btn" disabled={rssAdding}>
+                  {rssAdding ? "Adding..." : "+ Add Feed"}
+                </button>
+              </form>
+            )}
           </div>
         )}
 
