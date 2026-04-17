@@ -830,6 +830,19 @@ export default function FeedClient() {
         }
         .search-empty strong { color: var(--text-muted); display: block; font-size: 16px; font-weight: 700; margin-bottom: 4px; }
 
+        /* ===== FEED END STATE ===== */
+        .feed-end {
+          text-align: center; padding: 48px 20px 24px;
+          display: flex; flex-direction: column; align-items: center; gap: 8px;
+        }
+        .feed-end-icon {
+          font-size: 22px; color: var(--primary);
+          margin-bottom: 4px; animation: pulse 2.5s ease-in-out infinite;
+        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .feed-end-title { font-size: 16px; font-weight: 700; color: var(--text-heading); letter-spacing: -0.2px; }
+        .feed-end-sub { font-size: 13px; color: var(--text-subtle); line-height: 1.6; max-width: 300px; }
+
         /* ===== REFRESH BUTTON ===== */
         .feed-refresh-btn {
           display: flex; align-items: center; gap: 6px;
@@ -1032,6 +1045,14 @@ export default function FeedClient() {
                     index={i}
                   />
                 ))}
+              </div>
+            )}
+
+            {!search && (page === totalPages || totalPages <= 1) && filtered.length > 0 && (
+              <div className="feed-end">
+                <div className="feed-end-icon">✦</div>
+                <div className="feed-end-title">You&apos;re all caught up</div>
+                <div className="feed-end-sub">That&apos;s your curated batch for now. Check back after your next digest.</div>
               </div>
             )}
 
