@@ -21,7 +21,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       select: { id: true, isHidden: true },
     });
 
-    return NextResponse.json({ content: updated });
+    return NextResponse.json({ isHidden: updated.isHidden });
   } catch (error) {
     console.error("Toggle hide content error:", error);
     return NextResponse.json({ error: "Failed to update content" }, { status: 500 });

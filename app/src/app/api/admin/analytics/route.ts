@@ -86,10 +86,10 @@ export async function GET() {
         users: totalUsers,
         content: totalContent,
         interactions: totalInteractions,
-        activeUsers7d: activeUsersRaw.length,
+        active7d: activeUsersRaw.length,
       },
-      dailyChart,
-      topSources: topSources.map((s) => ({ source: s.source, count: s._count.source })),
+      daily: dailyChart,
+      sources: topSources.map((s) => ({ source: s.source, count: s._count.source })),
     });
   } catch (error) {
     console.error("Admin analytics error:", error);

@@ -43,7 +43,7 @@ export async function GET(req: Request) {
       }),
     ]);
 
-    return NextResponse.json({ content, total, page, pageSize: PAGE_SIZE });
+    return NextResponse.json({ items: content, total, page, pageSize: PAGE_SIZE });
   } catch (error) {
     console.error("Admin content error:", error);
     return NextResponse.json({ error: "Failed to fetch content" }, { status: 500 });
