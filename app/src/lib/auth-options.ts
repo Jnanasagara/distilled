@@ -59,7 +59,8 @@ export const authOptions: NextAuthOptions = {
         token.onboarded = (user as any).onboarded;
         const isAdmin = (user as any).role === "ADMIN";
         const rememberMe = !isAdmin && (user as any).rememberMe !== false;
-        token.exp = Math.floor(Date.now() / 1000) + (rememberMe ? 365 * 24 * 60 * 60 : 24 * 60 * 60);
+        const expiry = isAdmin ? 8 * 60 * 60 : rememberMe ? 365 * 24 * 60 * 60 : 24 * 60 * 60;
+        token.exp = Math.floor(Date.now() / 1000) + expiry;
       }
       if (token.id && trigger !== "signIn") {
         const dbUser = await prisma.user.findUnique({
