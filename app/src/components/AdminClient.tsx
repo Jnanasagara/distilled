@@ -781,7 +781,7 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
                           labelFormatter={(v) => new Date(v).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                         />
                         <Bar dataKey="interactions" fill="var(--primary)" radius={[3, 3, 0, 0]} name="Interactions" />
-                        <Bar dataKey="signups" fill="var(--primary-light, #c7d2fe)" radius={[3, 3, 0, 0]} name="Signups" />
+                        <Bar dataKey="signups" fill="#60a5fa" radius={[3, 3, 0, 0]} name="Signups" />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
