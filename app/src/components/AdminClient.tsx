@@ -29,6 +29,16 @@ type Report = {
 
 type ChangePwForm = { currentPassword: string; newPassword: string; confirmPassword: string };
 
+type Announcement = {
+  id: string;
+  title: string;
+  message: string;
+  type: "BANNER" | "EMAIL" | "BOTH";
+  isActive: boolean;
+  createdAt: string;
+  expiresAt: string | null;
+};
+
 type AnalyticsData = {
   totals: { users: number; content: number; interactions: number; active7d: number };
   daily: { date: string; signups: number; interactions: number }[];
@@ -82,6 +92,14 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
   const [hidingId, setHidingId] = useState<string | null>(null);
   const CONTENT_PAGE_SIZE = 30;
 
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [annLoading, setAnnLoading] = useState(true);
+  const [annForm, setAnnForm] = useState({ title: "", message: "", type: "BANNER" as "BANNER" | "EMAIL" | "BOTH", expiresAt: "" });
+  const [annSubmitting, setAnnSubmitting] = useState(false);
+  const [annError, setAnnError] = useState("");
+  const [annSuccess, setAnnSuccess] = useState("");
+  const [deactivatingId, setDeactivatingId] = useState<string | null>(null);
+
   const pwRules = [
     { label: "At least 8 characters", met: pwForm.newPassword.length >= 8 },
     { label: "One uppercase letter", met: /[A-Z]/.test(pwForm.newPassword) },
@@ -121,6 +139,60 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
       .then((d) => { setContentItems(d.items ?? []); setContentTotal(d.total ?? 0); setContentLoading(false); })
       .catch(() => setContentLoading(false));
   }, [contentPage, contentFilter, contentSearch]);
+
+  useEffect(() => {
+    setAnnLoading(true);
+    fetch("/api/admin/announcements")
+      .then((r) => r.json())
+      .then((d) => { setAnnouncements(d.announcements ?? []); setAnnLoading(false); })
+      .catch(() => setAnnLoading(false));
+  }, []);
+
+  async function handleCreateAnnouncement(e: React.FormEvent) {
+    e.preventDefault();
+    setAnnError(""); setAnnSuccess("");
+    setAnnSubmitting(true);
+    try {
+      const body: { title: string; message: string; type: string; expiresAt?: string } = {
+        title: annForm.title,
+        message: annForm.message,
+        type: annForm.type,
+      };
+      if (annForm.expiresAt) body.expiresAt = annForm.expiresAt;
+      const res = await fetch("/api/admin/announcements", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setAnnError(data.error ?? "Failed to create announcement.");
+      } else {
+        setAnnouncements((prev) => [data.announcement, ...prev]);
+        setAnnForm({ title: "", message: "", type: "BANNER", expiresAt: "" });
+        setAnnSuccess(annForm.type === "EMAIL" || annForm.type === "BOTH"
+          ? "Announcement created and emails are being sent."
+          : "Announcement created.");
+        setTimeout(() => setAnnSuccess(""), 4000);
+      }
+    } catch {
+      setAnnError("Network error. Please try again.");
+    } finally {
+      setAnnSubmitting(false);
+    }
+  }
+
+  async function handleDeactivateAnnouncement(id: string) {
+    setDeactivatingId(id);
+    try {
+      const res = await fetch(`/api/admin/announcements/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setAnnouncements((prev) => prev.map((a) => a.id === id ? { ...a, isActive: false } : a));
+      }
+    } finally {
+      setDeactivatingId(null);
+    }
+  }
 
   async function handleResolve(reportId: string) {
     setResolvingId(reportId);
@@ -499,6 +571,59 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
         .adm-hide-btn:disabled { opacity: 0.4; cursor: not-allowed; }
         .chip-hidden { background: #fee2e2; color: #dc2626; }
 
+        /* Announcements */
+        .ann-form { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+        .ann-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .ann-input {
+          width: 100%; padding: 11px 14px;
+          border: 1.5px solid var(--border-default); border-radius: 10px;
+          font-family: inherit; font-size: 13px; color: var(--text-heading);
+          outline: none; background: var(--bg-input); transition: all 0.2s;
+        }
+        .ann-input::placeholder { color: var(--text-subtle); }
+        .ann-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+        .ann-textarea { resize: vertical; min-height: 72px; }
+        .ann-select { appearance: none; cursor: pointer; }
+        .ann-submit {
+          padding: 10px 20px; border: none; border-radius: 10px;
+          background: var(--btn-dark); color: var(--text-inverse);
+          font-family: inherit; font-size: 13px; font-weight: 700;
+          cursor: pointer; transition: all 0.2s; align-self: flex-start;
+        }
+        .ann-submit:hover { background: var(--btn-dark-hover); }
+        .ann-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+        .ann-list { display: flex; flex-direction: column; gap: 8px; }
+        .ann-item {
+          display: flex; align-items: flex-start; gap: 12px;
+          padding: 12px 14px; border-radius: 12px;
+          border: 1.5px solid var(--border-default);
+        }
+        .ann-item.inactive { opacity: 0.5; background: var(--bg-elevated); }
+        .ann-item-info { flex: 1; min-width: 0; }
+        .ann-item-title { font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 3px; }
+        .ann-item-msg { font-size: 12px; color: var(--text-muted); line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+        .ann-item-meta { display: flex; align-items: center; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+        .ann-item-type { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--bg-elevated); color: var(--text-subtle); text-transform: uppercase; }
+        .ann-item-date { font-size: 11px; color: var(--text-subtle); }
+        .ann-deactivate-btn {
+          flex-shrink: 0; padding: 5px 12px; border-radius: 8px;
+          border: 1.5px solid #fca5a5; color: #dc2626; background: transparent;
+          font-family: inherit; font-size: 11px; font-weight: 700;
+          cursor: pointer; transition: all 0.15s; white-space: nowrap;
+        }
+        .ann-deactivate-btn:hover { background: #fee2e2; }
+        .ann-deactivate-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .ann-divider { border: none; border-top: 1px solid var(--border-default); margin: 16px 0; }
+        .adm-export-btn {
+          display: flex; align-items: center; gap: 6px;
+          padding: 8px 14px; border-radius: 9px;
+          border: 1.5px solid var(--border-default); background: var(--bg-card);
+          font-family: inherit; font-size: 12px; font-weight: 600;
+          color: var(--text-muted); cursor: pointer; transition: all 0.2s;
+          text-decoration: none; white-space: nowrap;
+        }
+        .adm-export-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--bg-accent); }
+
         @media (max-width: 768px) {
           .adm-stats { grid-template-columns: repeat(2, 1fr); }
           .adm-analytics-totals { grid-template-columns: repeat(2, 1fr); }
@@ -506,6 +631,7 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
           .adm-container { padding: 16px 16px 60px; }
           .adm-search { width: 100%; }
           .adm-card-header { flex-direction: column; align-items: flex-start; }
+          .ann-form-row { grid-template-columns: 1fr; }
         }
       `}</style>
 
@@ -723,12 +849,22 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
               <div className="adm-card-title">User Management</div>
               <div className="adm-card-subtitle">View, search, and ban/unban users</div>
             </div>
-            <input
-              className="adm-search"
-              placeholder="Search by name or email..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+              <input
+                className="adm-search"
+                placeholder="Search by name or email..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              <a href="/api/admin/users/export" download className="adm-export-btn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Export CSV
+              </a>
+            </div>
           </div>
 
           {banError && <div className="adm-error" style={{marginBottom: 12}}>{banError}</div>}
@@ -833,6 +969,99 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
               <span>{(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} of {total}</span>
               <button className="adm-page-btn" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>← Prev</button>
               <button className="adm-page-btn" disabled={page * PAGE_SIZE >= total} onClick={() => setPage((p) => p + 1)}>Next →</button>
+            </div>
+          )}
+        </div>
+
+        {/* Announcements */}
+        <div className="adm-card">
+          <div className="adm-card-header">
+            <div>
+              <div className="adm-card-title">Announcements</div>
+              <div className="adm-card-subtitle">Broadcast messages to users via banner, email, or both</div>
+            </div>
+          </div>
+
+          <form className="ann-form" onSubmit={handleCreateAnnouncement}>
+            <input
+              className="ann-input"
+              placeholder="Title"
+              value={annForm.title}
+              onChange={(e) => setAnnForm((f) => ({ ...f, title: e.target.value }))}
+              required
+              maxLength={120}
+            />
+            <textarea
+              className="ann-input ann-textarea"
+              placeholder="Message"
+              value={annForm.message}
+              onChange={(e) => setAnnForm((f) => ({ ...f, message: e.target.value }))}
+              required
+              maxLength={1000}
+            />
+            <div className="ann-form-row">
+              <select
+                className="ann-input ann-select"
+                value={annForm.type}
+                onChange={(e) => setAnnForm((f) => ({ ...f, type: e.target.value as "BANNER" | "EMAIL" | "BOTH" }))}
+              >
+                <option value="BANNER">Banner only (in-app)</option>
+                <option value="EMAIL">Email only</option>
+                <option value="BOTH">Banner + Email</option>
+              </select>
+              <input
+                className="ann-input"
+                type="datetime-local"
+                value={annForm.expiresAt}
+                onChange={(e) => setAnnForm((f) => ({ ...f, expiresAt: e.target.value }))}
+                title="Optional expiry date"
+                placeholder="Expires (optional)"
+              />
+            </div>
+            {annError && <div className="adm-error">{annError}</div>}
+            {annSuccess && <div className="pw-success">{annSuccess}</div>}
+            <button type="submit" className="ann-submit" disabled={annSubmitting}>
+              {annSubmitting ? "Sending..." : "Post Announcement"}
+            </button>
+          </form>
+
+          <hr className="ann-divider" />
+
+          {annLoading ? (
+            <div className="adm-empty">Loading announcements...</div>
+          ) : announcements.length === 0 ? (
+            <div className="adm-empty">No announcements yet.</div>
+          ) : (
+            <div className="ann-list">
+              {announcements.map((ann) => (
+                <div key={ann.id} className={`ann-item ${!ann.isActive ? "inactive" : ""}`}>
+                  <div className="ann-item-info">
+                    <div className="ann-item-title">{ann.title}</div>
+                    <div className="ann-item-msg">{ann.message}</div>
+                    <div className="ann-item-meta">
+                      <span className="ann-item-type">{ann.type}</span>
+                      <span className="ann-item-date">
+                        {new Date(ann.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      </span>
+                      {!ann.isActive && <span className="adm-chip chip-unverified" style={{ fontSize: 10 }}>Deactivated</span>}
+                      {ann.expiresAt && ann.isActive && (
+                        <span className="ann-item-date">
+                          Expires {new Date(ann.expiresAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {ann.isActive && (
+                    <button
+                      className="ann-deactivate-btn"
+                      disabled={deactivatingId === ann.id}
+                      onClick={() => handleDeactivateAnnouncement(ann.id)}
+                    >
+                      {deactivatingId === ann.id ? "..." : "Deactivate"}
+                    </button>
+                  )}
+                </div>
+              ))}
             </div>
           )}
         </div>

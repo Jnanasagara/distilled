@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import ThemeToggle from "./ThemeToggle";
+import AnnouncementBanner from "./AnnouncementBanner";
 import { avatarUrl } from "@/lib/avatars";
 
 type Page = "feed" | "saved" | "history" | "profile" | "preferences";
@@ -310,6 +311,7 @@ export default function NavBar({ currentPage }: { currentPage: Page }) {
         }
       `}</style>
 
+      <AnnouncementBanner />
       <nav className={`app-navbar ${scrolled ? "scrolled" : ""}`}>
         <div className="app-navbar-inner">
           <div className="app-brand" onClick={() => navigate("/feed")} role="button" tabIndex={0}>

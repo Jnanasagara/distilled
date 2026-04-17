@@ -243,3 +243,46 @@ export async function sendPasswordResetEmail(email: string, token: string) {
     throw new Error("Failed to send password reset email. Please try again.");
   }
 }
+
+export async function sendAnnouncementEmail(
+  email: string,
+  name: string | null,
+  title: string,
+  message: string
+) {
+  const firstName = name ? name.split(" ")[0] : null;
+
+  const { error } = await resend.emails.send({
+    from: FROM_ADDRESS,
+    to: email,
+    subject: `${title} | Distilled`,
+    html: `
+      <div style="background:#f8fafc;padding:32px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+        <div style="max-width:480px;margin:0 auto;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;">
+          <div style="padding:28px 32px;border-bottom:1px solid #f1f5f9;">
+            ${emailHeader()}
+          </div>
+          <div style="padding:32px;">
+            ${firstName ? `<p style="font-size:14px;color:#64748b;margin:0 0 12px;">Hi ${firstName},</p>` : ""}
+            <h1 style="font-size:20px;font-weight:800;color:#0f172a;margin:0 0 12px;letter-spacing:-0.4px;">${title}</h1>
+            <p style="font-size:15px;color:#475569;margin:0 0 28px;line-height:1.7;white-space:pre-wrap;">${message}</p>
+            <a href="${process.env.NEXTAUTH_URL}/feed" style="display:inline-block;padding:12px 24px;background:#0f172a;color:#ffffff;text-decoration:none;border-radius:10px;font-size:14px;font-weight:700;">
+              Open Distilled
+            </a>
+          </div>
+          <div style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:16px 32px;">
+            <p style="font-size:12px;color:#94a3b8;margin:0;text-align:center;line-height:1.6;">
+              You received this because you have an account on Distilled.&nbsp;
+              <a href="${process.env.NEXTAUTH_URL}/preferences" style="color:#64748b;text-decoration:none;font-weight:600;">Preferences</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    `,
+  });
+
+  if (error) {
+    console.error(`Failed to send announcement email to ${email}:`, error);
+    throw new Error("Failed to send announcement email.");
+  }
+}

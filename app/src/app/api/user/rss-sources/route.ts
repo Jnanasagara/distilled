@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
 import { fetchRSS } from "@/lib/fetchers/rss";
 import { redis } from "@/lib/redis";
+import { rateLimit, getIp, rateLimitedResponse } from "@/lib/rate-limit";
 
 export async function GET() {
   try {
@@ -25,6 +26,10 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    const ip = getIp(req);
+    const { limited } = await rateLimit(`rss-add:${ip}`, 10, 3600);
+    if (limited) return rateLimitedResponse(3600);
+
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 

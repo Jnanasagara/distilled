@@ -271,3 +271,19 @@ model PushSubscription {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
+enum AnnouncementType {
+  BANNER
+  EMAIL
+  BOTH
+}
+
+model Announcement {
+  id        String           @id @default(uuid())
+  title     String
+  message   String
+  type      AnnouncementType @default(BANNER)
+  isActive  Boolean          @default(true)
+  createdAt DateTime         @default(now())
+  expiresAt DateTime?
+}
