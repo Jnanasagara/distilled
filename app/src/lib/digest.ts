@@ -2,6 +2,7 @@ import { createHmac } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { sendDigestEmail } from "@/lib/email";
 import { scoreArticle } from "@/lib/algorithm";
+import { sendPushToUser } from "@/lib/push";
 
 const DIGEST_ARTICLE_COUNT = 6;
 
@@ -82,6 +83,14 @@ export async function sendDigests(frequency: "DAILY" | "WEEKLY" | "MONTHLY") {
       const unsubscribeUrl = `${process.env.NEXTAUTH_URL}/api/unsubscribe?uid=${user.id}&token=${unsubscribeToken}`;
 
       await sendDigestEmail(user.email, user.name, digestArticles, frequency, unsubscribeUrl);
+
+      const freqLabel = frequency === "DAILY" ? "daily" : frequency === "WEEKLY" ? "weekly" : "monthly";
+      sendPushToUser(user.id, {
+        title: "Your digest is ready",
+        body: `${digestArticles.length} ${freqLabel} picks are waiting for you.`,
+        url: "/feed",
+      }).catch(() => {});
+
       sent++;
     } catch (err) {
       console.error(`Failed to send digest to ${user.email}:`, err);
