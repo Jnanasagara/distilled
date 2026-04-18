@@ -304,6 +304,7 @@ export default function ProfileClient() {
           border: 1.5px solid var(--border-default); background: var(--bg-card);
           font-family: inherit; font-size: 13px; font-weight: 600;
           color: var(--text-muted); cursor: pointer; transition: all 0.2s;
+          white-space: nowrap; flex-shrink: 0;
         }
         .prof-pw-toggle:hover { border-color: var(--primary); color: var(--primary); background: var(--bg-accent); }
         .prof-pw-form { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; max-width: 400px; }

@@ -371,6 +371,9 @@ export default function PreferencesForm({
         }
         .reset-btn:hover { border-color: var(--text-error); color: var(--text-error); background: var(--bg-error); }
         .reset-btn.done { border-color: var(--border-success); color: var(--text-success); background: var(--bg-success); }
+        .reset-confirm-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+        .reset-confirm-label { font-size: 13px; color: var(--text-muted); }
+        .reset-confirm-btns { display: flex; gap: 8px; }
 
         /* Toggle switch */
         .toggle-row {
@@ -705,9 +708,20 @@ export default function PreferencesForm({
                   Reset the algorithm's topic weights back to default. Your feed will start fresh.
                 </p>
               </div>
-              {resetConfirming ? (
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Are you sure?</span>
+              {!resetConfirming && (
+                <button
+                  className={`reset-btn ${resetDone ? "done" : ""}`}
+                  onClick={() => setResetConfirming(true)}
+                  disabled={resetting}
+                >
+                  {resetting ? "Resetting..." : resetDone ? "Done!" : "Reset Weights"}
+                </button>
+              )}
+            </div>
+            {resetConfirming && (
+              <div className="reset-confirm-row">
+                <span className="reset-confirm-label">Are you sure? This cannot be undone.</span>
+                <div className="reset-confirm-btns">
                   <button
                     className="reset-btn"
                     style={{ borderColor: "var(--text-error)", color: "var(--text-error)" }}
@@ -723,16 +737,8 @@ export default function PreferencesForm({
                     Cancel
                   </button>
                 </div>
-              ) : (
-                <button
-                  className={`reset-btn ${resetDone ? "done" : ""}`}
-                  onClick={() => setResetConfirming(true)}
-                  disabled={resetting}
-                >
-                  {resetting ? "Resetting..." : resetDone ? "Done!" : "Reset Weights"}
-                </button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         )}
 
