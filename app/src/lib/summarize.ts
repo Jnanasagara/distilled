@@ -29,7 +29,7 @@ export async function summarizeContent(
 
 Given this article title and URL, provide two things as a JSON object:
 1. "summary": A concise 2-3 sentence neutral summary of what the article is likely about.
-2. "impact": A 1-2 sentence "how this affects you" blurb explaining the practical impact on everyday consumers, developers, or investors, whoever is most relevant to this topic. Be specific and direct.
+2. "impact": A 1-2 sentence "why this matters" blurb explaining why this is significant for everyday consumers, developers, or investors, whoever is most relevant to this topic. Be specific and direct.
 
 Respond ONLY with a valid JSON object. No extra text, no markdown, no code fences.
 Example: {"summary": "...", "impact": "..."}
