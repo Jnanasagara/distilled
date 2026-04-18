@@ -57,6 +57,7 @@ export default function PreferencesForm({
   const [saving, setSaving] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [resetDone, setResetDone] = useState(false);
+  const [resetConfirming, setResetConfirming] = useState(false);
   const [error, setError] = useState("");
 
   type RssSource = { id: string; name: string; url: string; topicId: string | null };
@@ -704,13 +705,33 @@ export default function PreferencesForm({
                   Reset the algorithm's topic weights back to default. Your feed will start fresh.
                 </p>
               </div>
-              <button
-                className={`reset-btn ${resetDone ? "done" : ""}`}
-                onClick={handleResetWeights}
-                disabled={resetting}
-              >
-                {resetting ? "Resetting..." : resetDone ? "Done!" : "Reset Weights"}
-              </button>
+              {resetConfirming ? (
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Are you sure?</span>
+                  <button
+                    className="reset-btn"
+                    style={{ borderColor: "var(--text-error)", color: "var(--text-error)" }}
+                    onClick={() => { setResetConfirming(false); handleResetWeights(); }}
+                    disabled={resetting}
+                  >
+                    Yes, reset
+                  </button>
+                  <button
+                    className="reset-btn"
+                    onClick={() => setResetConfirming(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  className={`reset-btn ${resetDone ? "done" : ""}`}
+                  onClick={() => setResetConfirming(true)}
+                  disabled={resetting}
+                >
+                  {resetting ? "Resetting..." : resetDone ? "Done!" : "Reset Weights"}
+                </button>
+              )}
             </div>
           </div>
         )}
