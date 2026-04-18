@@ -27,6 +27,16 @@ function frequencyToPostCount(frequency: string, userPostCount: number): number 
   }
 }
 
+// Recency decay window per frequency — weekly/monthly users shouldn't see
+// old articles heavily penalized just because they check infrequently.
+function frequencyToDecayWindow(frequency: string): number {
+  switch (frequency) {
+    case "WEEKLY":  return 168;  // 7 days
+    case "MONTHLY": return 720;  // 30 days
+    default:        return 72;   // 3 days (daily)
+  }
+}
+
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -61,10 +71,8 @@ export async function GET() {
     ]);
 
     const frequency = userPreference?.frequency ?? "DAILY";
-    const postCount = frequencyToPostCount(
-      frequency,
-      userPreference?.postCount ?? 20
-    );
+    const postCount = frequencyToPostCount(frequency, userPreference?.postCount ?? 20);
+    const decayWindowHours = frequencyToDecayWindow(frequency);
     const showTrending = userPreference?.showTrending ?? true;
     const topicIds = userTopics.map((ut) => ut.topicId);
 
@@ -109,7 +117,7 @@ export async function GET() {
 
     // Greedy diversity-aware selection with source affinity + topic hot score signals
     const diversified = greedyDiverseSelect(
-      dedupedArticles, topicWeightMap, postCount, sourceAffinityMap, topicHotMap
+      dedupedArticles, topicWeightMap, postCount, sourceAffinityMap, topicHotMap, decayWindowHours
     );
 
     // Enforce source spacing — no 3+ consecutive articles from the same source

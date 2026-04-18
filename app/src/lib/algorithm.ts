@@ -139,11 +139,14 @@ export async function computeTopicHotScores(
 
 // Compute base score for an article.
 // Accepts optional source affinity + topic hot maps; defaults to neutral (1.0) if absent.
+// decayWindowHours controls how quickly old articles lose score — set per user frequency:
+//   daily=72h, weekly=168h, monthly=720h.
 export function scoreArticle(
   article: any,
   topicWeightMap: Map<string, number>,
   sourceAffinityMap: Map<string, number> = new Map(),
-  topicHotMap: Map<string, number> = new Map()
+  topicHotMap: Map<string, number> = new Map(),
+  decayWindowHours = 72
 ): number {
   const weight = article.topicId
     ? (topicWeightMap.get(article.topicId) ?? 1.0)
@@ -151,7 +154,7 @@ export function scoreArticle(
 
   const ageMs = Date.now() - new Date(article.publishedAt ?? article.createdAt).getTime();
   const ageHours = ageMs / (1000 * 60 * 60);
-  const recencyScore = Math.exp(-ageHours / 72);
+  const recencyScore = Math.exp(-ageHours / decayWindowHours);
 
   const imageBonus = article.imageUrl ? 1.05 : 1.0;
   const sourceAffinity = sourceAffinityMap.get(article.source) ?? 1.0;
@@ -166,7 +169,8 @@ export function greedyDiverseSelect(
   topicWeightMap: Map<string, number>,
   limit: number,
   sourceAffinityMap: Map<string, number> = new Map(),
-  topicHotMap: Map<string, number> = new Map()
+  topicHotMap: Map<string, number> = new Map(),
+  decayWindowHours = 72
 ): any[] {
   const selected: any[] = [];
   const remaining = [...candidates];
@@ -179,7 +183,7 @@ export function greedyDiverseSelect(
 
     for (let i = 0; i < remaining.length; i++) {
       const a = remaining[i];
-      const base = scoreArticle(a, topicWeightMap, sourceAffinityMap, topicHotMap);
+      const base = scoreArticle(a, topicWeightMap, sourceAffinityMap, topicHotMap, decayWindowHours);
 
       const srcCount = seenSources.get(a.source) ?? 0;
       const srcBonus = Math.pow(0.9, srcCount);
