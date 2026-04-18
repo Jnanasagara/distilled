@@ -129,7 +129,7 @@ function SavedCard({
       </div>
 
       <div className="saved-card-content">
-        {article.topic && <div className="saved-card-topic">{article.topic.emoji} {article.topic.name}</div>}
+        {article.topic && <div className="saved-card-topic">{article.topic.name}</div>}
         <h3 className="saved-card-title">{article.title}</h3>
         {article.summary && <p className="saved-card-summary">{article.summary}</p>}
         {article.impact && (

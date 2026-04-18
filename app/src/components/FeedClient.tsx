@@ -278,7 +278,7 @@ function ArticleCard({
       <div className="card-content">
         {article.topic && (
           <div className="card-topic">
-            {article.topic.emoji} {article.topic.name}
+            {article.topic.name}
           </div>
         )}
         <h3 className="card-title">{article.title}</h3>
