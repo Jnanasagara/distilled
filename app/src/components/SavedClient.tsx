@@ -134,7 +134,7 @@ function SavedCard({
         {article.summary && <p className="saved-card-summary">{article.summary}</p>}
         {article.impact && (
           <div className="saved-card-impact">
-            <span className="saved-impact-label">How this affects you</span>
+            <span className="saved-impact-label">✦ Why this matters</span>
             <p className="saved-impact-text">{article.impact}</p>
           </div>
         )}
@@ -434,8 +434,8 @@ export default function SavedClient() {
         .saved-card-topic { font-size: 12px; font-weight: 600; color: var(--primary); margin-bottom: 8px; }
         .saved-card-title { font-size: 16px; font-weight: 700; color: var(--text-heading); line-height: 1.4; margin: 0 0 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .saved-card-summary { font-size: 13.5px; color: var(--text-muted); line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: 0 0 12px; }
-        .saved-card-impact { background: var(--primary-light); border-left: 3px solid var(--primary); border-radius: 0 6px 6px 0; padding: 10px 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 3px; }
-        .saved-impact-label { font-size: 10px; font-weight: 700; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.06em; }
+        .saved-card-impact { background: var(--primary-light); border-left: 3px solid var(--primary); border-radius: 0 6px 6px 0; padding: 10px 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 3px; box-shadow: -2px 0 8px rgba(249,115,22,0.25); }
+        .saved-impact-label { font-size: 10px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.06em; }
         .saved-impact-text { font-size: 12.5px; color: var(--text-body); line-height: 1.4; margin: 0; }
         .saved-card-meta { font-size: 12px; color: var(--text-subtle); margin-top: auto; margin-bottom: 12px; }
         .saved-card-actions { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid var(--border-divider); flex-wrap: wrap; gap: 8px; }

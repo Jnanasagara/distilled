@@ -287,7 +287,7 @@ function ArticleCard({
         )}
         {article.impact && (
           <div className="card-impact">
-            <span className="impact-label">How this affects you</span>
+            <span className="impact-label">✦ Why this matters</span>
             <p className="impact-text">{article.impact}</p>
           </div>
         )}
@@ -671,8 +671,9 @@ export default function FeedClient() {
           border-radius: 0 6px 6px 0;
           padding: 10px 12px; margin-bottom: 12px;
           display: flex; flex-direction: column; gap: 3px;
+          box-shadow: -2px 0 8px rgba(249,115,22,0.25);
         }
-        .impact-label { font-size: 10px; font-weight: 700; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.06em; }
+        .impact-label { font-size: 10px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.06em; }
         .impact-text { font-size: 12.5px; color: var(--text-body); line-height: 1.4; margin: 0; }
         .card-reason {
           background: var(--bg-accent); border-left: 3px solid var(--primary);
