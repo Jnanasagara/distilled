@@ -3,29 +3,26 @@ import { redis } from "@/lib/redis";
 import { fetchContentForTopic, FetchedItem, TimeFilter } from "@/lib/fetchers";
 import { summarizeContent, RateLimitError } from "@/lib/summarize";
 
-// Hard daily cap enforced via Redis — shared across ALL ingest job types.
-// Google Gemini free tier: 1500 RPD. Cap at 1000 to leave a buffer.
-const DAILY_GEMINI_CAP = 1000;
+// Hard daily cap — Groq free tier allows 14,400 RPD. Cap at 10,000 to leave buffer.
+const DAILY_AI_CAP = 10000;
 
-// Atomically increment the daily Redis counter before each Gemini call.
+// Atomically increment the daily Redis counter before each AI call.
 // Returns true if the call is allowed, false if daily cap is reached.
-async function canCallGemini(): Promise<boolean> {
+async function canCallAI(): Promise<boolean> {
   try {
     const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD UTC
-    const key = `gemini:daily:${today}`;
+    const key = `ai:daily:${today}`;
     const count = await redis.incr(key);
     if (count === 1) {
-      // First call today — expire key after 25 hours so it cleans itself up
       await redis.expire(key, 25 * 60 * 60);
     }
-    if (count > DAILY_GEMINI_CAP) {
-      console.log(`Gemini daily cap reached (${count}/${DAILY_GEMINI_CAP}), skipping summarization.`);
+    if (count > DAILY_AI_CAP) {
+      console.log(`AI daily cap reached (${count}/${DAILY_AI_CAP}), skipping summarization.`);
       return false;
     }
     return true;
   } catch {
-    // Redis unavailable — skip summarization rather than risk blowing quota
-    console.warn("Redis unavailable for Gemini cap check, skipping summarization.");
+    console.warn("Redis unavailable for AI cap check, skipping summarization.");
     return false;
   }
 }
@@ -59,9 +56,9 @@ export async function ingestContentForTopic(
       });
 
       // Summarize only if: no summary yet AND global daily cap not reached.
-      // 6s delay keeps us at ~10 RPM, safely under Gemini's 15 RPM free limit.
-      if (!result.summary && await canCallGemini()) {
-        await new Promise((r) => setTimeout(r, 6000));
+      // 3s delay keeps us at ~20 RPM, safely under Groq's 30 RPM free limit.
+      if (!result.summary && await canCallAI()) {
+        await new Promise((r) => setTimeout(r, 3000));
         try {
           const ai = await summarizeContent(item.title, item.url);
           if (ai) {
@@ -72,15 +69,13 @@ export async function ingestContentForTopic(
           }
         } catch (err) {
           if (err instanceof RateLimitError) {
-            // Provider rejected after all retries — no successful API call was
-            // processed, so return the slot to avoid burning the daily cap.
             try {
               const today = new Date().toISOString().slice(0, 10);
-              await redis.decr(`gemini:daily:${today}`);
+              await redis.decr(`ai:daily:${today}`);
             } catch {
               // Redis unavailable — accept the wasted slot rather than crash
             }
-            console.warn("Gemini rate-limited after retries; slot returned to daily cap.");
+            console.warn("Groq rate-limited after retries; slot returned to daily cap.");
           }
         }
       }

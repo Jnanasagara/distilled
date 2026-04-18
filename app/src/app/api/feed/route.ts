@@ -7,7 +7,10 @@ import {
   applyWeightDecay,
   suppressRedundancy,
   injectTrendSlots,
+  enforceSourceSpacing,
   generateReason,
+  computeSourceAffinity,
+  computeTopicHotScores,
 } from "@/lib/algorithm";
 import { redis } from "@/lib/redis";
 
@@ -47,12 +50,14 @@ export async function GET() {
     // Apply weight decay
     await applyWeightDecay(userId);
 
-    const [userPreference, userTopics] = await Promise.all([
+    const [userPreference, userTopics, sourceAffinityMap, topicHotMap] = await Promise.all([
       prisma.userPreference.findUnique({ where: { userId } }),
       prisma.userTopic.findMany({
         where: { userId, status: "ACTIVE" },
         include: { topic: true },
       }),
+      computeSourceAffinity(userId).catch(() => new Map<string, number>()),
+      computeTopicHotScores(userId).catch(() => new Map<string, number>()),
     ]);
 
     const frequency = userPreference?.frequency ?? "DAILY";
@@ -102,12 +107,16 @@ export async function GET() {
     // Redundancy suppression
     const dedupedArticles = suppressRedundancy(rawArticles);
 
-    // Greedy diversity-aware selection — scores each candidate against what's
-    // already been picked, so diversity penalties are accurate (not pre-sort guesses)
-    const diversified = greedyDiverseSelect(dedupedArticles, topicWeightMap, postCount);
+    // Greedy diversity-aware selection with source affinity + topic hot score signals
+    const diversified = greedyDiverseSelect(
+      dedupedArticles, topicWeightMap, postCount, sourceAffinityMap, topicHotMap
+    );
+
+    // Enforce source spacing — no 3+ consecutive articles from the same source
+    const spaced = enforceSourceSpacing(diversified);
 
     // Fetch liked/saved interactions
-    const articleIds = diversified.map((a) => a.id);
+    const articleIds = spaced.map((a) => a.id);
     const interactions = await prisma.interaction.findMany({
       where: {
         userId,
@@ -124,11 +133,11 @@ export async function GET() {
     );
 
     // Attach interaction state + reason
-    const articlesWithState = diversified.map((a) => ({
+    const articlesWithState = spaced.map((a) => ({
       ...a,
       isLiked: likedSet.has(a.id),
       isSaved: savedSet.has(a.id),
-      _reason: generateReason(a, topicWeightMap, a._isTrending ?? false),
+      _reason: generateReason(a, topicWeightMap, a._isTrending ?? false, sourceAffinityMap, topicHotMap),
     }));
 
     // Trend slot injection (skipped if user disabled trending)

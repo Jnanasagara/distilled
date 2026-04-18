@@ -1,12 +1,10 @@
-import { GoogleGenAI } from "@google/genai";
+import OpenAI from "openai";
 
 export interface SummarizeResult {
   summary: string;
   impact: string;
 }
 
-// Thrown when all retry attempts are exhausted with 429 — signals no API
-// call was successfully processed so the daily cap slot can be returned.
 export class RateLimitError extends Error {
   constructor() {
     super("rate_limited");
@@ -14,15 +12,18 @@ export class RateLimitError extends Error {
   }
 }
 
-const RETRY_DELAYS_MS = [10_000, 20_000]; // 10s then 20s before giving up
+const groq = new OpenAI({
+  apiKey: process.env.GROQ_API_KEY ?? "",
+  baseURL: "https://api.groq.com/openai/v1",
+});
+
+const RETRY_DELAYS_MS = [8_000, 15_000];
 
 export async function summarizeContent(
   title: string,
   url: string
 ): Promise<SummarizeResult | null> {
-  if (!process.env.GEMINI_API_KEY) return null;
-
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  if (!process.env.GROQ_API_KEY) return null;
 
   const prompt = `You are a content analyst for Distilled, a mindful news aggregator.
 
@@ -38,14 +39,15 @@ URL: ${url}`;
 
   for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
     try {
-      const response = await ai.models.generateContent({
-        model: "gemini-2.0-flash",
-        contents: prompt,
+      const response = await groq.chat.completions.create({
+        model: "llama-3.1-8b-instant",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.3,
+        max_tokens: 300,
       });
 
-      const text = response.text?.trim() ?? "";
+      const text = response.choices[0]?.message?.content?.trim() ?? "";
 
-      // Strip markdown code fences if model wraps output anyway
       const cleaned = text
         .replace(/^```(?:json)?\s*/i, "")
         .replace(/\s*```$/, "")
@@ -57,24 +59,20 @@ URL: ${url}`;
       }
       return null;
     } catch (error: unknown) {
-      // Google API 429: status 429 or RESOURCE_EXHAUSTED in the message
       const status = (error as { status?: number })?.status;
       const message = (error as { message?: string })?.message ?? "";
-      const isRateLimit = status === 429 || message.includes("RESOURCE_EXHAUSTED") || message.includes("429");
+      const isRateLimit = status === 429 || message.includes("rate_limit") || message.includes("429");
 
       if (isRateLimit && attempt < RETRY_DELAYS_MS.length) {
         const delay = RETRY_DELAYS_MS[attempt];
-        console.warn(`Gemini 429 on attempt ${attempt + 1}, retrying in ${delay / 1000}s…`);
+        console.warn(`Groq 429 on attempt ${attempt + 1}, retrying in ${delay / 1000}s…`);
         await new Promise((r) => setTimeout(r, delay));
         continue;
       }
 
-      if (isRateLimit) {
-        // All retries exhausted — no successful call was made
-        throw new RateLimitError();
-      }
+      if (isRateLimit) throw new RateLimitError();
 
-      console.error("Gemini summarization error:", error);
+      console.error("Groq summarization error:", error);
       return null;
     }
   }
