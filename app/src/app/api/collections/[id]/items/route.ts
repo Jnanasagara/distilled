@@ -17,6 +17,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     });
     if (!collection) return NextResponse.json({ error: "Collection not found" }, { status: 404 });
 
+    const content = await prisma.content.findUnique({ where: { id: contentId } });
+    if (!content) return NextResponse.json({ error: "Content not found" }, { status: 404 });
+
     await prisma.collectionItem.upsert({
       where: { collectionId_contentId: { collectionId, contentId } },
       update: {},
