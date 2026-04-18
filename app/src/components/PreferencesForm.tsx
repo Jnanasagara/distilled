@@ -649,7 +649,7 @@ export default function PreferencesForm({
                 >
                   <option value="">No topic (unclassified)</option>
                   {topics.map((t) => (
-                    <option key={t.id} value={t.id}>{t.emoji ? `${t.emoji} ` : ""}{t.name}</option>
+                    <option key={t.id} value={t.id}>{t.name}</option>
                   ))}
                 </select>
                 {rssError && <div className="rss-error">{rssError}</div>}
