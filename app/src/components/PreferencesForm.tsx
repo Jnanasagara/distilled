@@ -551,7 +551,10 @@ export default function PreferencesForm({
               <div
                 key={opt.value}
                 className={`freq-card ${frequency === opt.value ? "selected" : ""}`}
+                role="button"
+                tabIndex={0}
                 onClick={() => handleFrequencyChange(opt.value)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleFrequencyChange(opt.value); }}
               >
                 <div className="freq-label">{opt.label}</div>
                 <div className="freq-desc">{opt.description}</div>

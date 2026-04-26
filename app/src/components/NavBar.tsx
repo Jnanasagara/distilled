@@ -314,7 +314,7 @@ export default function NavBar({ currentPage }: { currentPage: Page }) {
       <AnnouncementBanner />
       <nav className={`app-navbar ${scrolled ? "scrolled" : ""}`}>
         <div className="app-navbar-inner">
-          <div className="app-brand" onClick={() => navigate("/feed")} role="button" tabIndex={0}>
+          <div className="app-brand" onClick={() => navigate("/feed")} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") navigate("/feed"); }} role="button" tabIndex={0}>
             <div className="app-brand-icon"><img src="/android-chrome-192x192.png" alt="Distilled" /></div>
             <span className="app-brand-name">Distilled</span>
           </div>
@@ -357,7 +357,7 @@ export default function NavBar({ currentPage }: { currentPage: Page }) {
         </div>
       </nav>
 
-      {open && <div className="app-drawer-backdrop" onClick={() => setOpen(false)} />}
+      {open && <div className="app-drawer-backdrop" role="presentation" onClick={() => setOpen(false)} onKeyDown={(e) => { if (e.key === "Escape") setOpen(false); }} />}
 
       <div className={`app-drawer ${open ? "open" : ""}`} role="dialog" aria-modal="true">
         <div className="drawer-header">

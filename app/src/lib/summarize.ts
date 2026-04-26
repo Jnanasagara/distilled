@@ -50,7 +50,7 @@ URL: ${url}`;
 
       const cleaned = text
         .replace(/^```(?:json)?\s*/i, "")
-        .replace(/\s*```$/, "")
+        .replace(/```$/, "")
         .trim();
 
       const parsed = JSON.parse(cleaned);

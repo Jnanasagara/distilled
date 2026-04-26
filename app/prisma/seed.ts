@@ -35,7 +35,8 @@ async function main() {
 
   // Create default admin user
   const adminEmail = process.env.ADMIN_EMAIL ?? "admin@distilled.app";
-  const adminPassword = process.env.ADMIN_DEFAULT_PASSWORD ?? "Admin@123!";
+  const adminPassword = process.env.ADMIN_DEFAULT_PASSWORD;
+  if (!adminPassword) throw new Error("ADMIN_DEFAULT_PASSWORD env var is required for seeding");
 
   const existing = await prisma.user.findUnique({ where: { email: adminEmail } });
   if (!existing) {

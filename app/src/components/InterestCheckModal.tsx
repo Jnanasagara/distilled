@@ -96,7 +96,9 @@ export default function InterestCheckModal() {
         display: "flex", alignItems: "center", justifyContent: "center",
         padding: 24, animation: "icm-fade 0.2s ease",
       }}
+      role="presentation"
       onClick={(e) => { if (e.target === e.currentTarget) handleLooksGood(); }}
+      onKeyDown={(e) => { if (e.key === "Escape") handleLooksGood(); }}
     >
       <div style={{
         background: "var(--bg-card)",

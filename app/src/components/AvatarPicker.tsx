@@ -150,7 +150,9 @@ export default function AvatarPicker({
         display: "flex", alignItems: "center", justifyContent: "center",
         padding: 20, animation: "ap-fade 0.2s ease",
       }}
+      role="presentation"
       onClick={(e) => { if (e.target === e.currentTarget && onCancel) onCancel(); }}
+      onKeyDown={(e) => { if (e.key === "Escape" && onCancel) onCancel(); }}
     >
       {inner}
       <style>{`

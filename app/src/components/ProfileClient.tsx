@@ -558,7 +558,7 @@ export default function ProfileClient() {
               />
             )}
             <div className="prof-hero">
-              <div className="prof-avatar" onClick={() => setShowAvatarPicker(true)} title="Change avatar">
+              <div className="prof-avatar" onClick={() => setShowAvatarPicker(true)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setShowAvatarPicker(true); }} role="button" tabIndex={0} title="Change avatar">
                 {data.user.avatarSeed
                   ? <img src={avatarUrl(data.user.avatarSeed)} alt="avatar" />
                   : (data.user.name ?? data.user.email).slice(0, 2).toUpperCase()}
@@ -702,7 +702,7 @@ export default function ProfileClient() {
 
             {/* Change Password */}
             <div className="prof-card">
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: showChangePw ? 0 : 0 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 0 }}>
                 <div>
                   <div className="prof-card-title">Security</div>
                   <div className="prof-card-desc" style={{ marginBottom: 0 }}>Manage your account password.</div>
