@@ -34,6 +34,31 @@ const FALLBACK_GRADIENTS: Record<string, string> = {
   devto: "linear-gradient(135deg, #374151 0%, #4B5563 100%)",
   rss: "linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)",
 };
+const TOPIC_FALLBACK_IMAGES: Record<string, string> = {
+  "technology":              "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80",
+  "ai":                      "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?auto=format&fit=crop&w=800&q=80",
+  "artificial intelligence": "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?auto=format&fit=crop&w=800&q=80",
+  "programming":             "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=800&q=80",
+  "science":                 "https://images.unsplash.com/photo-1507413245164-6160d8298b31?auto=format&fit=crop&w=800&q=80",
+  "business":                "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80",
+  "finance":                 "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=800&q=80",
+  "crypto & web3":           "https://images.unsplash.com/photo-1621761191319-c6fb62004040?auto=format&fit=crop&w=800&q=80",
+  "crypto":                  "https://images.unsplash.com/photo-1621761191319-c6fb62004040?auto=format&fit=crop&w=800&q=80",
+  "health":                  "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=800&q=80",
+  "politics":                "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?auto=format&fit=crop&w=800&q=80",
+  "world news":              "https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=800&q=80",
+  "gaming":                  "https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?auto=format&fit=crop&w=800&q=80",
+  "design":                  "https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=800&q=80",
+  "startups":                "https://images.unsplash.com/photo-1556761175-4b46a572b786?auto=format&fit=crop&w=800&q=80",
+  "devops":                  "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80",
+  "cloud":                   "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80",
+};
+const SOURCE_FALLBACK_IMAGES: Record<string, string> = {
+  hackernews: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=800&q=80",
+  devto:      "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=800&q=80",
+  reddit:     "https://images.unsplash.com/photo-1432821596592-e2c18b78144f?auto=format&fit=crop&w=800&q=80",
+  rss:        "https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=800&q=80",
+};
 const SOURCE_LABELS: Record<string, string> = {
   reddit: "Reddit", hackernews: "Hacker News", devto: "Dev.to", rss: "RSS",
 };
@@ -72,6 +97,7 @@ function SavedCard({
 }) {
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [fallbackImgError, setFallbackImgError] = useState(false);
   const [removing, setRemoving] = useState(false);
   const [showCollPicker, setShowCollPicker] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -101,6 +127,11 @@ function SavedCard({
   }, [showCollPicker]);
 
   const hasImage = article.imageUrl && !imgError;
+  const topicKey = article.topic?.name?.toLowerCase() ?? "";
+  const fallbackImgUrl =
+    TOPIC_FALLBACK_IMAGES[topicKey] ??
+    SOURCE_FALLBACK_IMAGES[article.source] ??
+    TOPIC_FALLBACK_IMAGES["technology"];
   const inCollections = new Set(
     collections.filter((c) => c.items.some((it) => it.contentId === article.id)).map((c) => c.id)
   );
@@ -119,6 +150,10 @@ function SavedCard({
             <img src={article.imageUrl!} alt={article.title} className={`saved-card-img ${imgLoaded ? "loaded" : ""}`} loading="lazy"
               onLoad={() => setImgLoaded(true)} onError={() => setImgError(true)} />
           </>
+        ) : !fallbackImgError ? (
+          <img src={fallbackImgUrl} alt={article.topic?.name ?? sourceLabel}
+            className="saved-card-img loaded" loading="lazy"
+            onError={() => setFallbackImgError(true)} />
         ) : (
           <div className="saved-card-img-fallback" style={{ background: FALLBACK_GRADIENTS[article.source] ?? "linear-gradient(135deg, #374151 0%, #4B5563 100%)" }}>
             <span className="saved-fallback-emoji">{article.topic?.emoji ?? sourceEmoji}</span>
