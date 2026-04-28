@@ -18,11 +18,22 @@ const topics = [
   { slug: "climate", name: "Climate & Environment", emoji: "🌱", description: "Climate change, sustainability, and clean energy" },
   { slug: "crypto", name: "Crypto & Web3", emoji: "₿", description: "Bitcoin, Ethereum, DeFi, and blockchain" },
   { slug: "space", name: "Space", emoji: "🛸", description: "Astronomy, space exploration, and cosmology" },
-  { slug: "politics", name: "Politics", emoji: "🏛️", description: "Government, policy, and geopolitics" },
+  { slug: "geopolitics", name: "Geopolitics", emoji: "🌐", description: "International relations, foreign policy, and world events" },
   { slug: "gaming", name: "Gaming", emoji: "🎮", description: "Video games, esports, and game development" },
 ];
 
 async function main() {
+  // Migrate existing "politics" topic to "geopolitics" in-place (preserves all UserTopic FK references)
+  const oldTopic = await prisma.topic.findUnique({ where: { slug: "politics" } });
+  const newTopic = await prisma.topic.findUnique({ where: { slug: "geopolitics" } });
+  if (oldTopic && !newTopic) {
+    await prisma.topic.update({
+      where: { slug: "politics" },
+      data: { slug: "geopolitics", name: "Geopolitics", emoji: "🌐", description: "International relations, foreign policy, and world events" },
+    });
+    console.log("✅ Migrated topic: politics → geopolitics");
+  }
+
   console.log("Seeding topics...");
   for (const topic of topics) {
     await prisma.topic.upsert({

@@ -380,6 +380,8 @@ export function generateReason(
     hackernews: "Hacker News",
     devto: "Dev.to",
     rss: "RSS",
+    aljazeera: "Al Jazeera",
+    atlas: "Atlas",
   };
 
   // Hot topic — user has been actively saving/liking this topic recently

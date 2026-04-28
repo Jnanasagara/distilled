@@ -34,6 +34,8 @@ const SOURCE_OPTIONS = [
   { value: "reddit",     label: "Reddit" },
   { value: "devto",      label: "Dev.to" },
   { value: "rss",        label: "RSS" },
+  { value: "aljazeera",  label: "Al Jazeera" },
+  { value: "atlas",      label: "Atlas" },
 ] as const;
 
 export default function PreferencesForm({
@@ -680,6 +682,7 @@ export default function PreferencesForm({
                 const isBlocked = blockedSources.has(opt.value);
                 const dotColors: Record<string, string> = {
                   hackernews: "#FF6600", reddit: "#FF4500", devto: "#3B49DF", rss: "#FFA500",
+                  aljazeera: "#007A5E", atlas: "#6366F1",
                 };
                 return (
                   <button

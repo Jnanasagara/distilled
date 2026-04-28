@@ -26,13 +26,15 @@ type Collection = {
 };
 
 const SOURCE_COLORS: Record<string, string> = {
-  reddit: "#FF4500", hackernews: "#FF6600", devto: "#3B49DF", rss: "#FFA500",
+  reddit: "#FF4500", hackernews: "#FF6600", devto: "#3B49DF", rss: "#FFA500", aljazeera: "#007A5E", atlas: "#6366F1",
 };
 const FALLBACK_GRADIENTS: Record<string, string> = {
   reddit: "linear-gradient(135deg, #FF4500 0%, #FF6534 100%)",
   hackernews: "linear-gradient(135deg, #FF6600 0%, #FF8C33 100%)",
   devto: "linear-gradient(135deg, #374151 0%, #4B5563 100%)",
   rss: "linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)",
+  aljazeera: "linear-gradient(135deg, #007A5E 0%, #00A87D 100%)",
+  atlas:     "linear-gradient(135deg, #6366F1 0%, #818CF8 100%)",
 };
 const TOPIC_FALLBACK_IMAGES: Record<string, string> = {
   "technology":              "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80",
@@ -46,6 +48,7 @@ const TOPIC_FALLBACK_IMAGES: Record<string, string> = {
   "crypto":                  "https://images.unsplash.com/photo-1621761191319-c6fb62004040?auto=format&fit=crop&w=800&q=80",
   "health":                  "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=800&q=80",
   "politics":                "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?auto=format&fit=crop&w=800&q=80",
+  "geopolitics":             "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?auto=format&fit=crop&w=800&q=80",
   "world news":              "https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=800&q=80",
   "gaming":                  "https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?auto=format&fit=crop&w=800&q=80",
   "design":                  "https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=800&q=80",
@@ -58,12 +61,14 @@ const SOURCE_FALLBACK_IMAGES: Record<string, string> = {
   devto:      "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=800&q=80",
   reddit:     "https://images.unsplash.com/photo-1432821596592-e2c18b78144f?auto=format&fit=crop&w=800&q=80",
   rss:        "https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=800&q=80",
+  aljazeera:  "https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=800&q=80",
+  atlas:      "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80",
 };
 const SOURCE_LABELS: Record<string, string> = {
-  reddit: "Reddit", hackernews: "Hacker News", devto: "Dev.to", rss: "RSS",
+  reddit: "Reddit", hackernews: "Hacker News", devto: "Dev.to", rss: "RSS", aljazeera: "Al Jazeera", atlas: "Atlas",
 };
 const SOURCE_EMOJI: Record<string, string> = {
-  hackernews: "🔶", reddit: "🔴", devto: "💻", rss: "📰",
+  hackernews: "🔶", reddit: "🔴", devto: "💻", rss: "📰", aljazeera: "🌍", atlas: "🔗",
 };
 const COLLECTION_COLORS = ["#f97316","#3b82f6","#10b981","#8b5cf6","#ef4444","#f59e0b","#06b6d4","#ec4899"];
 

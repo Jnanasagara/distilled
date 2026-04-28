@@ -18,10 +18,10 @@ type Article = {
 };
 
 const SOURCE_COLORS: Record<string, string> = {
-  reddit: "#FF4500", hackernews: "#FF6600", devto: "#3B49DF", rss: "#FFA500",
+  reddit: "#FF4500", hackernews: "#FF6600", devto: "#3B49DF", rss: "#FFA500", aljazeera: "#007A5E", atlas: "#6366F1",
 };
 const SOURCE_LABELS: Record<string, string> = {
-  reddit: "Reddit", hackernews: "Hacker News", devto: "Dev.to", rss: "RSS",
+  reddit: "Reddit", hackernews: "Hacker News", devto: "Dev.to", rss: "RSS", aljazeera: "Al Jazeera", atlas: "Atlas",
 };
 
 function timeAgo(dateStr: string): string {

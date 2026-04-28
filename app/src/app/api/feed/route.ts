@@ -99,12 +99,17 @@ export async function GET() {
     const excludedSet = new Set(excludedInteractions.map((i) => i.contentId));
     const blockedSourceSet = new Set(blockedSources.map((b) => b.source));
 
+    // Candidate window: only consider articles within the user's decay window so weekly/monthly
+    // users always see the full period (not just the most-recent N regardless of date).
+    const candidateCutoff = new Date(Date.now() - decayWindowHours * 60 * 60 * 1000);
+
     // Fetch candidate articles — exclude already clicked/dismissed, blocked sources, and hidden content
     const rawArticles = await prisma.content.findMany({
       where: {
         topicId: { in: topicIds },
         id: { notIn: Array.from(excludedSet) },
         isHidden: false,
+        OR: [{ publishedAt: { gte: candidateCutoff } }, { publishedAt: null }],
         ...(blockedSourceSet.size > 0 ? { source: { notIn: Array.from(blockedSourceSet) } } : {}),
       },
       orderBy: { publishedAt: "desc" },

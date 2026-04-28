@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
 import { redis } from "@/lib/redis";
 
-const VALID_SOURCES = ["reddit", "hackernews", "devto", "rss"];
+const VALID_SOURCES = ["reddit", "hackernews", "devto", "rss", "aljazeera", "atlas"];
 
 export async function GET() {
   try {

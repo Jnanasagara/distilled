@@ -9,7 +9,8 @@ const parser = new Parser({
 
 export async function fetchRSS(
   url: string,
-  limit = 15
+  limit = 15,
+  source = "rss"
 ): Promise<FetchedItem[]> {
   try {
     const feed = await parser.parseURL(url);
@@ -28,7 +29,7 @@ export async function fetchRSS(
           sourceUrl: item.link ?? null,  // original article link is the source
           author: item.creator || item.author || null,
           publishedAt: item.pubDate ? new Date(item.pubDate) : undefined,
-          source: "rss",
+          source,
           imageUrl,
         };
       })

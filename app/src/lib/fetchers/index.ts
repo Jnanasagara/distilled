@@ -17,13 +17,14 @@ const TOPIC_SOURCE_MAP: { [key: string]: TopicFetcher } = {
     return [...r1, ...r2, ...r3];
   },
   technology: async (t = "day") => {
-    const [hn, devto, reddit, rss] = await Promise.all([
+    const [hn, devto, reddit, rss, atlas] = await Promise.all([
       fetchHackerNews(15),
       fetchDevTo("technology", 10),
       fetchReddit("technology", 10, t),
       fetchRSS("https://feeds.wired.com/wired/index", 10),
+      fetchRSS("https://links.atlasdev.club/feeds/shared", 10, "atlas"),
     ]);
-    return [...hn, ...devto, ...reddit, ...rss];
+    return [...hn, ...devto, ...reddit, ...rss, ...atlas];
   },
   "artificial-intelligence": async (t = "day") => {
     const [hn, devto, reddit, rss] = await Promise.all([
@@ -114,11 +115,11 @@ const TOPIC_SOURCE_MAP: { [key: string]: TopicFetcher } = {
     ]);
     return [...r1, ...r2, ...rss];
   },
-  politics: async (t = "day") => {
+  geopolitics: async (t = "day") => {
     const [r1, r2, rss] = await Promise.all([
-      fetchReddit("politics", 10, t),
+      fetchReddit("geopolitics", 10, t),
       fetchReddit("worldnews", 10, t),
-      fetchRSS("https://feeds.bbci.co.uk/news/world/rss.xml", 10),
+      fetchRSS("https://www.aljazeera.com/xml/rss/all.xml", 15, "aljazeera"),
     ]);
     return [...r1, ...r2, ...rss];
   },
