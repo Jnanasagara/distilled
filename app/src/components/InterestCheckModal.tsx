@@ -12,7 +12,7 @@ type Topic = {
 
 const POST_COUNT_OPTIONS = [10, 15, 20, 25, 30];
 
-export default function InterestCheckModal() {
+export default function InterestCheckModal({ onSaved }: { onSaved?: () => void } = {}) {
   const { data: session } = useSession();
   const [visible, setVisible] = useState(false);
   const [allTopics, setAllTopics] = useState<Topic[]>([]);
@@ -79,11 +79,13 @@ export default function InterestCheckModal() {
       sessionStorage.setItem(`interest_prompt_skipped_${session.user.id}`, "1");
     }
     setVisible(false);
+    onSaved?.();
   }
 
   async function handleDontAskAgain() {
     await save(true);
     setVisible(false);
+    onSaved?.();
   }
 
   if (!visible) return null;

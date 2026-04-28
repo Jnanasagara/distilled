@@ -559,7 +559,12 @@ export default function FeedClient() {
   return (
     <>
       <WelcomeModal />
-      <InterestCheckModal />
+      <InterestCheckModal onSaved={() => {
+        fetch("/api/feed")
+          .then((r) => r.json())
+          .then((data) => { setFeed(data); setLoading(false); })
+          .catch(() => {});
+      }} />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
