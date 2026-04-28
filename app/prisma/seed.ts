@@ -23,15 +23,22 @@ const topics = [
 ];
 
 async function main() {
-  // Migrate existing "politics" topic to "geopolitics" in-place (preserves all UserTopic FK references)
   const oldTopic = await prisma.topic.findUnique({ where: { slug: "politics" } });
   const newTopic = await prisma.topic.findUnique({ where: { slug: "geopolitics" } });
+
   if (oldTopic && !newTopic) {
+    // Simple rename — no "geopolitics" row exists yet, safe to rename in-place
     await prisma.topic.update({
       where: { slug: "politics" },
       data: { slug: "geopolitics", name: "Geopolitics", emoji: "🌐", description: "International relations, foreign policy, and world events" },
     });
     console.log("✅ Migrated topic: politics → geopolitics");
+  } else if (oldTopic && newTopic) {
+    // Both exist: move all FK references from old to new, then delete old
+    await prisma.userTopic.updateMany({ where: { topicId: oldTopic.id }, data: { topicId: newTopic.id } });
+    await prisma.content.updateMany({ where: { topicId: oldTopic.id }, data: { topicId: newTopic.id } });
+    await prisma.topic.delete({ where: { id: oldTopic.id } });
+    console.log("✅ Merged duplicate politics → geopolitics and cleaned up");
   }
 
   console.log("Seeding topics...");
