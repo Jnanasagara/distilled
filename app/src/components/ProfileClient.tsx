@@ -9,6 +9,15 @@ import {
   LineChart, Line, Legend, CartesianGrid,
 } from "recharts";
 
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = window.atob(base64);
+  const output = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; i++) output[i] = rawData.charCodeAt(i);
+  return output;
+}
+
 const TOPIC_COLORS = [
   "#f97316", "#0ea5e9", "#10b981", "#f59e0b",
   "#3b82f6", "#ef4444", "#14b8a6", "#84cc16",
@@ -183,7 +192,7 @@ export default function ProfileClient() {
         const reg = await navigator.serviceWorker.ready;
         const sub = await reg.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: vapidKey,
+          applicationServerKey: urlBase64ToUint8Array(vapidKey),
         });
         const json = sub.toJSON();
         await fetch("/api/user/push-subscription", {
