@@ -88,6 +88,7 @@ export default function ProfileClient() {
   const [pushSubscribed, setPushSubscribed] = useState(false);
   const [pushLoading, setPushLoading] = useState(false);
   const [pushError, setPushError] = useState("");
+  const [isMobile, setIsMobile] = useState(false);
 
   const [showDeleteZone, setShowDeleteZone] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState("");
@@ -162,6 +163,10 @@ export default function ProfileClient() {
       .then((r) => r.json())
       .then((d) => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    setIsMobile(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
   }, []);
 
   useEffect(() => {
@@ -841,31 +846,35 @@ export default function ProfileClient() {
             </div>
 
             {/* Push Notifications */}
-            {pushSupported && (
-              <div className="prof-card">
-                <div className="prof-card-title">Notifications</div>
-                <div className="prof-card-desc" style={{ marginBottom: 16 }}>Get notified about new articles matching your interests.</div>
-                <div className="prof-push-row">
-                  <div className="prof-push-info">
-                    <div className="prof-push-title">{pushSubscribed ? "Push notifications enabled" : "Push notifications disabled"}</div>
-                    <div className="prof-push-desc">
-                      {pushSubscribed
-                        ? "You will receive push notifications when new content arrives."
-                        : "Enable push notifications to get alerts for new articles."}
+            <div className="prof-card">
+              <div className="prof-card-title">Notifications</div>
+              <div className="prof-card-desc" style={{ marginBottom: 16 }}>Get notified about new articles matching your interests.</div>
+              {isMobile && pushSupported ? (
+                <>
+                  <div className="prof-push-row">
+                    <div className="prof-push-info">
+                      <div className="prof-push-title">{pushSubscribed ? "Push notifications enabled" : "Push notifications disabled"}</div>
+                      <div className="prof-push-desc">
+                        {pushSubscribed
+                          ? "You will receive push notifications when new content arrives."
+                          : "Enable push notifications to get alerts for new articles."}
+                      </div>
                     </div>
+                    <button
+                      className={`prof-push-toggle ${pushSubscribed ? "on" : ""}`}
+                      disabled={pushLoading}
+                      onClick={handlePushToggle}
+                      aria-label={pushSubscribed ? "Disable notifications" : "Enable notifications"}
+                    >
+                      <span className="prof-push-knob" />
+                    </button>
                   </div>
-                  <button
-                    className={`prof-push-toggle ${pushSubscribed ? "on" : ""}`}
-                    disabled={pushLoading}
-                    onClick={handlePushToggle}
-                    aria-label={pushSubscribed ? "Disable notifications" : "Enable notifications"}
-                  >
-                    <span className="prof-push-knob" />
-                  </button>
-                </div>
-                {pushError && <div className="prof-push-error">{pushError}</div>}
-              </div>
-            )}
+                  {pushError && <div className="prof-push-error">{pushError}</div>}
+                </>
+              ) : (
+                <div className="prof-push-desc">Use the installed app on your phone to enable push notifications.</div>
+              )}
+            </div>
 
             {/* Topic interest bar chart */}
             <div className="prof-card">
