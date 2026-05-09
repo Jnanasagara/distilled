@@ -1,5 +1,6 @@
 "use client";
 
+import UserFooter from "./UserFooter";
 import { useEffect, useState, useRef } from "react";
 import NavBar from "./NavBar";
 
@@ -82,6 +83,7 @@ function HistoryCard({ article, index }: { article: Article; index: number }) {
           )}
         </div>
       </div>
+      <UserFooter />
     </div>
   );
 }
@@ -119,7 +121,7 @@ export default function HistoryClient() {
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: var(--bg-page); font-family: 'Inter', -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
 
-        .hist-container { max-width: 900px; margin: 0 auto; padding: 24px 24px 80px; }
+        .hist-container { width: 100%; margin: 0 auto; padding: 24px 24px 80px; }
         .hist-hero { margin-bottom: 28px; }
         .hist-heading { font-size: 28px; font-weight: 800; color: var(--text-heading); letter-spacing: -0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
         .hist-count { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 28px; padding: 0 8px; border-radius: 999px; background: var(--primary); color: var(--text-inverse); font-size: 13px; font-weight: 700; }

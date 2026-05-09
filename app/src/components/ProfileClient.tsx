@@ -1,5 +1,6 @@
 "use client";
 
+import UserFooter from "./UserFooter";
 import { useEffect, useState } from "react";
 import NavBar from "./NavBar";
 import AvatarPicker from "./AvatarPicker";
@@ -246,7 +247,7 @@ export default function ProfileClient() {
         }
         .theme-toggle-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--bg-accent); }
 
-        .prof-container { max-width: 900px; margin: 0 auto; padding: 32px 24px 80px; display: flex; flex-direction: column; gap: 20px; }
+        .prof-container { width: 100%; padding: 32px 24px 80px; display: flex; flex-direction: column; gap: 20px; }
 
         /* Avatar + info card */
         .prof-hero {

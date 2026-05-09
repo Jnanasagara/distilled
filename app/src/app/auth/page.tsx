@@ -127,11 +127,11 @@ export default function AuthPage() {
           position: relative; z-index: 1;
         }
         .auth-left-logo-icon {
-          width: 30px; height: 30px; border-radius: 7px;
+          width: 44px; height: 44px; border-radius: 10px;
           overflow: hidden; flex-shrink: 0;
         }
         .auth-left-logo-icon img { width: 100%; height: 100%; display: block; }
-        .auth-left-logo-name { font-size: 16px; font-weight: 700; color: #fff; letter-spacing: -0.3px; }
+        .auth-left-logo-name { font-size: 18px; font-weight: 700; color: #fff; letter-spacing: -0.3px; }
 
         .auth-left-body {
           flex: 1; display: flex; flex-direction: column; justify-content: center;
@@ -192,11 +192,11 @@ export default function AuthPage() {
           margin-bottom: 32px;
         }
         .auth-mobile-logo-icon {
-          width: 28px; height: 28px; border-radius: 7px;
+          width: 36px; height: 36px; border-radius: 9px;
           overflow: hidden; flex-shrink: 0;
         }
         .auth-mobile-logo-icon img { width: 100%; height: 100%; display: block; }
-        .auth-mobile-logo-name { font-size: 16px; font-weight: 700; color: var(--text-heading); letter-spacing: -0.3px; }
+        .auth-mobile-logo-name { font-size: 17px; font-weight: 700; color: var(--text-heading); letter-spacing: -0.3px; }
 
         /* Form heading */
         .auth-heading {

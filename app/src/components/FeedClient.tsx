@@ -1,5 +1,6 @@
 "use client";
 
+import UserFooter from "./UserFooter";
 import { useEffect, useState, useRef } from "react";
 import { useSession } from "next-auth/react";
 import NavBar from "./NavBar";
@@ -585,7 +586,7 @@ export default function FeedClient() {
         body { background: var(--bg-page); font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-font-smoothing: antialiased; transition: background 0.3s ease; }
 
         /* ===== MAIN LAYOUT ===== */
-        .feed-container { max-width: 1200px; margin: 0 auto; padding: 24px 24px 80px; }
+        .feed-container { width: 100%; padding: 24px 32px 80px; }
 
         /* ===== FEED META ===== */
         .feed-hero { margin-bottom: 28px; }
@@ -1116,6 +1117,7 @@ export default function FeedClient() {
           </>
         )}
       </div>
+      <UserFooter />
     </>
   );
 }

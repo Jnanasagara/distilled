@@ -347,7 +347,7 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
         }
         .adm-navbar.scrolled { border-bottom-color: var(--border-default); box-shadow: var(--shadow-navbar); }
         .adm-navbar-inner {
-          max-width: 1100px; margin: 0 auto; padding: 14px 24px;
+          width: 100%; padding: 14px 32px;
           display: flex; justify-content: space-between; align-items: center;
         }
         .adm-brand { display: flex; align-items: center; gap: 10px; }
@@ -376,7 +376,7 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
           border-bottom: 1px solid var(--border-default);
         }
         .adm-tabs {
-          max-width: 1100px; margin: 0 auto; padding: 0 24px;
+          width: 100%; padding: 0 32px;
           display: flex; overflow-x: auto;
           -webkit-overflow-scrolling: touch; scrollbar-width: none;
         }
@@ -400,7 +400,7 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
         }
 
         /* ===== LAYOUT ===== */
-        .adm-container { max-width: 1100px; margin: 0 auto; padding: 28px 24px 80px; display: flex; flex-direction: column; gap: 20px; }
+        .adm-container { max-width: 100%; margin: 0; padding: 28px 32px 80px; display: flex; flex-direction: column; gap: 20px; }
 
         /* ===== WARNING ===== */
         .adm-warning {
@@ -764,6 +764,23 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
                       <div className="adm-atotal-lbl">Interactions</div>
                     </div>
                   </div>
+                  {analytics.sources && analytics.sources.length > 0 && (
+                    <div style={{ marginBottom: 24 }}>
+                      <div className="adm-chart-title" style={{ marginBottom: 10 }}>Content by Source</div>
+                      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                        {analytics.sources.map((s) => (
+                          <div key={s.source} style={{
+                            padding: "8px 14px", borderRadius: 8,
+                            background: "var(--bg-elevated)", border: "1px solid var(--border-default)",
+                            display: "flex", flexDirection: "column", gap: 2, minWidth: 90,
+                          }}>
+                            <span style={{ fontSize: 18, fontWeight: 800, color: "var(--text-heading)" }}>{s.count.toLocaleString()}</span>
+                            <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>{s.source}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   <div className="adm-chart-title">Daily Interactions (last 30 days)</div>
                   <div className="adm-chart-wrap">
                     <ResponsiveContainer width="100%" height="100%">
@@ -808,6 +825,43 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
               ) : (
                 <div className="adm-empty">Failed to load analytics.</div>
               )}
+            </div>
+
+            {/* Quick Actions */}
+            <div className="adm-card">
+              <div className="adm-card-header">
+                <div>
+                  <div className="adm-card-title">Quick Actions</div>
+                  <div className="adm-card-subtitle">Common admin tasks</div>
+                </div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 12, padding: "4px 0" }}>
+                {[
+                  { label: "Review Open Reports", count: openReportCount, color: "#ef4444", bg: "#fef2f2", action: () => setActiveTab("reports") },
+                  { label: "Manage Users", count: userTotal, color: "#3b82f6", bg: "#eff6ff", action: () => setActiveTab("users") },
+                  { label: "Moderate Content", count: null, color: "#8b5cf6", bg: "#f5f3ff", action: () => setActiveTab("content") },
+                  { label: "Send Announcement", count: null, color: "#f97316", bg: "#fff7ed", action: () => setActiveTab("dashboard") },
+                ].map((item) => (
+                  <button
+                    key={item.label}
+                    onClick={item.action}
+                    style={{
+                      display: "flex", flexDirection: "column", alignItems: "flex-start",
+                      gap: 6, padding: "14px 16px", border: "1px solid var(--border-default)",
+                      borderRadius: 10, background: "var(--bg-elevated)",
+                      cursor: "pointer", transition: "all 0.15s", textAlign: "left",
+                      fontFamily: "inherit",
+                    }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = item.color; (e.currentTarget as HTMLButtonElement).style.background = item.bg; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border-default)"; (e.currentTarget as HTMLButtonElement).style.background = "var(--bg-elevated)"; }}
+                  >
+                    {item.count !== null && (
+                      <span style={{ fontSize: 20, fontWeight: 800, color: item.color, letterSpacing: "-0.5px" }}>{item.count}</span>
+                    )}
+                    <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-heading)" }}>{item.label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Announcements */}

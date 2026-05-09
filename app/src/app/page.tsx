@@ -331,14 +331,45 @@ export default async function Home() {
         .lp-cta-note { font-size: 12px; color: rgba(255,255,255,0.2); margin-top: 14px; }
 
         /* ── FOOTER ── */
-        .lp-footer-wrap { border-top: 1px solid #141414; }
-        .lp-footer {
-          max-width: 1100px; margin: 0 auto; padding: 24px 40px;
-          display: flex; align-items: center; justify-content: space-between;
-          font-size: 12.5px; color: rgba(255,255,255,0.2);
+        .lp-footer-wrap { border-top: 1px solid #141414; background: #050505; }
+        .lp-footer { max-width: 1200px; margin: 0 auto; padding: 56px 40px 32px; }
+        .lp-footer-top {
+          display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px;
+          margin-bottom: 48px;
         }
-        .lp-footer a { color: rgba(255,255,255,0.2); text-decoration: none; transition: color 0.15s; }
-        .lp-footer a:hover { color: rgba(255,255,255,0.5); }
+        .lp-footer-brand { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; }
+        .lp-footer-brand-icon { width: 28px; height: 28px; border-radius: 7px; overflow: hidden; flex-shrink: 0; }
+        .lp-footer-brand-icon img { width: 100%; height: 100%; display: block; }
+        .lp-footer-brand-name { font-size: 16px; font-weight: 700; color: #fff; letter-spacing: -0.3px; }
+        .lp-footer-tagline { font-size: 13px; color: rgba(255,255,255,0.35); line-height: 1.65; max-width: 240px; margin-bottom: 20px; }
+        .lp-footer-disclaimer {
+          font-size: 11px; color: rgba(255,255,255,0.22); line-height: 1.65; max-width: 260px;
+          padding: 12px 14px; border: 1px solid #1e1e1e; border-radius: 8px; background: #0f0f0f;
+        }
+        .lp-footer-col-title {
+          font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.45);
+          text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px;
+        }
+        .lp-footer-links { display: flex; flex-direction: column; gap: 11px; }
+        .lp-footer-links a { font-size: 13.5px; color: rgba(255,255,255,0.35); text-decoration: none; transition: color 0.15s; }
+        .lp-footer-links a:hover { color: rgba(255,255,255,0.75); }
+        .lp-footer-bottom {
+          border-top: 1px solid #141414; padding-top: 24px;
+          display: flex; align-items: center; justify-content: space-between;
+          font-size: 12px; color: rgba(255,255,255,0.18);
+        }
+        .lp-footer-bottom a { color: rgba(255,255,255,0.18); text-decoration: none; transition: color 0.15s; }
+        .lp-footer-bottom a:hover { color: rgba(255,255,255,0.45); }
+        .lp-footer-bottom-links { display: flex; align-items: center; gap: 20px; }
+        @media (max-width: 900px) {
+          .lp-footer-top { grid-template-columns: 1fr 1fr; gap: 32px; }
+          .lp-footer-brand-col { grid-column: 1 / -1; }
+          .lp-footer { padding: 40px 24px 24px; }
+        }
+        @media (max-width: 520px) {
+          .lp-footer-top { grid-template-columns: 1fr; }
+          .lp-footer-bottom { flex-direction: column; gap: 12px; text-align: center; }
+        }
 
         /* ── RESPONSIVE ── */
         @media (max-width: 900px) {
@@ -671,11 +702,53 @@ export default async function Home() {
       {/* ── FOOTER ── */}
       <div className="lp-footer-wrap">
         <div className="lp-footer">
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ width: 20, height: 20, borderRadius: 5, overflow: "hidden", flexShrink: 0 }}><img src="/android-chrome-192x192.png" alt="Distilled" style={{ width: "100%", height: "100%", display: "block" }} /></div>
-            <span>Distilled · © 2026</span>
+          <div className="lp-footer-top">
+            <div className="lp-footer-brand-col">
+              <div className="lp-footer-brand">
+                <div className="lp-footer-brand-icon"><img src="/android-chrome-192x192.png" alt="Distilled" /></div>
+                <span className="lp-footer-brand-name">Distilled</span>
+              </div>
+              <p className="lp-footer-tagline">Your personalized reading feed — curated from across the web, ranked by what you actually care about.</p>
+              <div className="lp-footer-disclaimer">
+                Content on Distilled is aggregated from third-party sources including Reddit, Hacker News, Dev.to, and RSS feeds. Distilled does not claim ownership of any third-party content. All articles link to their original publishers.
+              </div>
+            </div>
+            <div>
+              <div className="lp-footer-col-title">Product</div>
+              <div className="lp-footer-links">
+                <a href="/auth">Get started</a>
+                <a href="/#features">Features</a>
+                <a href="/#how-it-works">How it works</a>
+                <a href="/auth">Email digests</a>
+              </div>
+            </div>
+            <div>
+              <div className="lp-footer-col-title">Content Sources</div>
+              <div className="lp-footer-links">
+                <a href="https://news.ycombinator.com" target="_blank" rel="noopener noreferrer">Hacker News</a>
+                <a href="https://www.reddit.com" target="_blank" rel="noopener noreferrer">Reddit</a>
+                <a href="https://dev.to" target="_blank" rel="noopener noreferrer">Dev.to</a>
+                <a href="/auth">Custom RSS feeds</a>
+              </div>
+            </div>
+            <div>
+              <div className="lp-footer-col-title">Support</div>
+              <div className="lp-footer-links">
+                <a href="mailto:support@distilled.blog">support@distilled.blog</a>
+                <a href="https://github.com/Jnanasagara/distilled" target="_blank" rel="noopener noreferrer">GitHub</a>
+                <a href="/terms">Terms of Service</a>
+                <a href="/privacy">Privacy Policy</a>
+              </div>
+            </div>
           </div>
-          <a href="mailto:support@distilled.blog">support@distilled.blog</a>
+          <div className="lp-footer-bottom">
+            <span>&#169; 2026 Distilled. All rights reserved.</span>
+            <div className="lp-footer-bottom-links">
+              <a href="/terms">Terms</a>
+              <a href="/privacy">Privacy</a>
+              <a href="mailto:support@distilled.blog">Contact</a>
+            </div>
+          </div>
         </div>
       </div>
     </main>

@@ -1,5 +1,6 @@
 "use client";
 
+import UserFooter from "./UserFooter";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
@@ -222,8 +223,8 @@ export default function PreferencesForm({
 
         .pref-page {
           min-height: 100vh;
-          display: flex; flex-direction: column; align-items: center;
-          padding: 48px 24px 80px;
+          display: flex; flex-direction: column; align-items: flex-start;
+          padding: 48px 32px 80px;
         }
 
         /* Theme toggle floating top-right */

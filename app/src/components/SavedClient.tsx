@@ -1,5 +1,6 @@
 "use client";
 
+import UserFooter from "./UserFooter";
 import { useEffect, useState, useRef } from "react";
 import NavBar from "./NavBar";
 
@@ -252,6 +253,7 @@ function SavedCard({
           </a>
         </div>
       </div>
+      <UserFooter />
     </div>
   );
 }
@@ -391,7 +393,7 @@ export default function SavedClient() {
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: var(--bg-page); font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-font-smoothing: antialiased; transition: background 0.3s ease; }
 
-        .saved-container { max-width: 1200px; margin: 0 auto; padding: 24px 24px 80px; }
+        .saved-container { width: 100%; padding: 24px 24px 80px; }
         .saved-hero { margin-bottom: 20px; display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
         .saved-hero-left {}
         .saved-heading { font-size: 28px; font-weight: 800; color: var(--text-heading); letter-spacing: -0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
