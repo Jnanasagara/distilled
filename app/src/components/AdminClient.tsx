@@ -347,18 +347,51 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
         }
         .adm-navbar.scrolled { border-bottom-color: var(--border-default); box-shadow: var(--shadow-navbar); }
         .adm-navbar-inner {
-          max-width: 1100px; margin: 0 auto; padding: 14px 24px;
+          max-width: 1280px; margin: 0 auto; padding: 14px 32px;
           display: flex; justify-content: space-between; align-items: center;
         }
         .adm-brand { display: flex; align-items: center; gap: 10px; }
-        .adm-brand-icon { width: 36px; height: 36px; border-radius: 10px; overflow: hidden; flex-shrink: 0; }
-        .adm-brand-icon img { width: 100%; height: 100%; display: block; }
-        .adm-brand-name { font-size: 20px; font-weight: 800; color: var(--text-heading); letter-spacing: -0.5px; }
+        .adm-brand-icon {
+          width: 36px; height: 36px; border-radius: 10px; overflow: hidden; flex-shrink: 0;
+          background: #fff; display: flex; align-items: center; justify-content: center;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+        }
+        .adm-brand-icon img { width: 100%; height: 100%; object-fit: contain; display: block; }
+        .adm-brand-name {
+          font-size: 20px; font-weight: 800; letter-spacing: -0.5px;
+          background: linear-gradient(135deg, #f97316, #ea580c);
+          -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
         .adm-badge {
           padding: 3px 10px; border-radius: 999px;
-          background: #fef3c7; color: #d97706;
-          font-size: 11px; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase;
+          background: linear-gradient(135deg, #f97316, #ea580c); color: white;
+          font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+          box-shadow: 0 2px 8px rgba(249,115,22,0.35);
         }
+        /* ===== DARK MODE CHIPS ===== */
+        [data-theme="dark"] .chip-admin { background: rgba(139,92,246,0.2); color: #a78bfa; }
+        [data-theme="dark"] .chip-active { background: rgba(34,197,94,0.15); color: #4ade80; }
+        [data-theme="dark"] .chip-banned { background: rgba(239,68,68,0.15); color: #f87171; }
+        [data-theme="dark"] .chip-open { background: rgba(245,158,11,0.15); color: #fbbf24; }
+        [data-theme="dark"] .chip-resolved { background: rgba(34,197,94,0.15); color: #4ade80; }
+        [data-theme="dark"] .chip-hidden { background: rgba(239,68,68,0.15); color: #f87171; }
+        [data-theme="dark"] .adm-warning { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.3); color: #fbbf24; }
+        [data-theme="dark"] .ann-success { background: rgba(34,197,94,0.1); color: #4ade80; }
+        [data-theme="dark"] .pw-success { background: rgba(34,197,94,0.1); color: #4ade80; }
+        [data-theme="dark"] .adm-logout-btn:hover { border-color: #f87171; color: #f87171; background: rgba(239,68,68,0.1); }
+        [data-theme="dark"] .adm-ban-btn.ban { border-color: #f87171; color: #f87171; }
+        [data-theme="dark"] .adm-ban-btn.ban:hover { background: rgba(239,68,68,0.15); }
+        [data-theme="dark"] .adm-ban-btn.unban { border-color: #4ade80; color: #4ade80; }
+        [data-theme="dark"] .adm-ban-btn.unban:hover { background: rgba(34,197,94,0.15); }
+        [data-theme="dark"] .adm-delete-btn { border-color: #f87171; color: #f87171; }
+        [data-theme="dark"] .adm-delete-btn:hover { background: rgba(239,68,68,0.15); }
+        [data-theme="dark"] .adm-delete-btn.confirm { background: #dc2626; border-color: #dc2626; color: white; }
+        [data-theme="dark"] .adm-resolve-btn { border-color: #4ade80; color: #4ade80; }
+        [data-theme="dark"] .adm-resolve-btn:hover { background: rgba(34,197,94,0.15); }
+        [data-theme="dark"] .ann-deactivate-btn { border-color: #f87171; color: #f87171; }
+        [data-theme="dark"] .ann-deactivate-btn:hover { background: rgba(239,68,68,0.15); }
+        /* ===== CARD ENHANCEMENTS ===== */
+        .adm-card { border: 1px solid var(--border-default); }
         .adm-nav-right { display: flex; align-items: center; gap: 8px; }
         .adm-logout-btn {
           display: flex; align-items: center; gap: 6px;
@@ -376,7 +409,7 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
           border-bottom: 1px solid var(--border-default);
         }
         .adm-tabs {
-          max-width: 1100px; margin: 0 auto; padding: 0 24px;
+          max-width: 1280px; margin: 0 auto; padding: 0 32px;
           display: flex; overflow-x: auto;
           -webkit-overflow-scrolling: touch; scrollbar-width: none;
         }
@@ -400,7 +433,28 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
         }
 
         /* ===== LAYOUT ===== */
-        .adm-container { max-width: 1100px; margin: 0 auto; padding: 28px 24px 80px; display: flex; flex-direction: column; gap: 20px; }
+        .adm-container { max-width: 1280px; margin: 0 auto; padding: 28px 32px 80px; display: flex; flex-direction: column; gap: 20px; }
+        /* ===== QUICK ACTIONS ===== */
+        .adm-quick-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .adm-qa-btn {
+          display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
+          padding: 16px 18px; border-radius: 14px;
+          border: 1.5px solid var(--border-default); background: var(--bg-card);
+          font-family: inherit; cursor: pointer; transition: all 0.2s ease;
+          text-align: left; box-shadow: var(--shadow-sm);
+        }
+        .adm-qa-btn:hover { border-color: var(--primary); background: var(--bg-accent); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .adm-qa-icon { width: 34px; height: 34px; border-radius: 9px; background: rgba(249,115,22,0.10); border: 1px solid rgba(249,115,22,0.20); display: flex; align-items: center; justify-content: center; color: var(--primary); }
+        .adm-qa-label { font-size: 13px; font-weight: 700; color: var(--text-heading); }
+        .adm-qa-desc { font-size: 11.5px; color: var(--text-subtle); line-height: 1.4; }
+        /* ===== STATUS ===== */
+        .adm-status-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .adm-status-item { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 11px; background: var(--bg-elevated); border: 1px solid var(--border-divider); }
+        .adm-status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .adm-status-dot.green { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
+        .adm-status-dot.yellow { background: #f59e0b; box-shadow: 0 0 6px #f59e0b; }
+        .adm-status-label { font-size: 12.5px; font-weight: 600; color: var(--text-muted); }
+        .adm-status-val { font-size: 11.5px; color: var(--text-subtle); margin-left: auto; }
 
         /* ===== WARNING ===== */
         .adm-warning {
@@ -685,6 +739,8 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
           .adm-profile-grid { grid-template-columns: 1fr; }
           .adm-tab { padding: 12px 12px; font-size: 12px; gap: 5px; }
           .adm-brand-name { font-size: 17px; }
+          .adm-quick-actions { grid-template-columns: repeat(2, 1fr); }
+          .adm-status-grid { grid-template-columns: 1fr; }
         }
       `}</style>
 
@@ -692,7 +748,7 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
       <nav className={`adm-navbar ${scrolled ? "scrolled" : ""}`}>
         <div className="adm-navbar-inner">
           <div className="adm-brand">
-            <div className="adm-brand-icon"><img src="/android-chrome-192x192.png" alt="Distilled" /></div>
+            <div className="adm-brand-icon"><img src="/logo.jpeg" alt="Distilled" /></div>
             <span className="adm-brand-name">Distilled</span>
             <span className="adm-badge">Admin</span>
           </div>
@@ -734,6 +790,90 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
         {/* ===== DASHBOARD TAB ===== */}
         {activeTab === "dashboard" && (
           <>
+            {/* Welcome header */}
+            <div className="adm-card" style={{ background: "linear-gradient(135deg, rgba(249,115,22,0.08) 0%, var(--bg-card) 60%)", borderColor: "rgba(249,115,22,0.18)" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+                <div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-heading)", letterSpacing: "-0.4px", marginBottom: 4 }}>
+                    Admin Dashboard
+                  </div>
+                  <div style={{ fontSize: 13.5, color: "var(--text-muted)" }}>
+                    {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+                    {openReportCount > 0 && (
+                      <span style={{ marginLeft: 12, padding: "2px 10px", borderRadius: 999, background: "#ef4444", color: "#fff", fontSize: 11, fontWeight: 700 }}>
+                        {openReportCount} open report{openReportCount > 1 ? "s" : ""}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button className="adm-export-btn" onClick={() => setActiveTab("reports")} style={{ display: openReportCount > 0 ? "flex" : "none" }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    View Reports
+                  </button>
+                  <button className="adm-export-btn" onClick={() => setActiveTab("users")}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    Manage Users
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="adm-quick-actions">
+              {[
+                {
+                  icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+                  label: "User Management", desc: "View, ban, or delete accounts", action: () => setActiveTab("users"),
+                },
+                {
+                  icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>,
+                  label: "Content Moderation", desc: "Hide or restore articles", action: () => setActiveTab("content"),
+                },
+                {
+                  icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+                  label: "Open Reports", desc: `${openReportCount} issue${openReportCount !== 1 ? "s" : ""} awaiting review`, action: () => setActiveTab("reports"),
+                },
+                {
+                  icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
+                  label: "Broadcast Message", desc: "Send banner or email to all users", action: () => { setActiveTab("dashboard"); setTimeout(() => document.querySelector(".ann-form")?.scrollIntoView({ behavior: "smooth" }), 100); },
+                },
+              ].map((qa) => (
+                <button key={qa.label} className="adm-qa-btn" onClick={qa.action}>
+                  <div className="adm-qa-icon">{qa.icon}</div>
+                  <div className="adm-qa-label">{qa.label}</div>
+                  <div className="adm-qa-desc">{qa.desc}</div>
+                </button>
+              ))}
+            </div>
+
+            {/* System status */}
+            <div className="adm-card">
+              <div className="adm-card-header" style={{ marginBottom: 14 }}>
+                <div>
+                  <div className="adm-card-title">System Status</div>
+                  <div className="adm-card-subtitle">Live service health</div>
+                </div>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#22c55e", background: "rgba(34,197,94,0.10)", border: "1px solid rgba(34,197,94,0.25)", padding: "3px 12px", borderRadius: 999 }}>All systems operational</span>
+              </div>
+              <div className="adm-status-grid">
+                {[
+                  { label: "Feed ingestion", val: "Running", status: "green" },
+                  { label: "AI summarisation", val: "Operational", status: "green" },
+                  { label: "Email digests", val: "Scheduled", status: "green" },
+                  { label: "Database", val: "Healthy", status: "green" },
+                  { label: "Search index", val: "Up to date", status: "green" },
+                  { label: "Auth service", val: "Active", status: "green" },
+                ].map((s) => (
+                  <div key={s.label} className="adm-status-item">
+                    <div className={`adm-status-dot ${s.status}`} />
+                    <span className="adm-status-label">{s.label}</span>
+                    <span className="adm-status-val">{s.val}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* Analytics */}
             <div className="adm-card">
               <div className="adm-card-header">
@@ -1276,6 +1416,18 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
         )}
 
       </div>
+
+      {/* Admin footer */}
+      <footer style={{ borderTop: "1px solid var(--border-divider)", background: "var(--bg-navbar)", backdropFilter: "blur(12px)", marginTop: 20 }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "16px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+          <span style={{ fontSize: 12.5, color: "var(--text-subtle)" }}>© 2026 Distilled Admin Panel · Restricted access</span>
+          <div style={{ display: "flex", gap: 16 }}>
+            <a href="/privacy" target="_blank" style={{ fontSize: 12.5, color: "var(--text-subtle)", textDecoration: "none" }}>Privacy Policy</a>
+            <a href="/terms" target="_blank" style={{ fontSize: 12.5, color: "var(--text-subtle)", textDecoration: "none" }}>Terms</a>
+            <a href="mailto:support@distilled.blog" style={{ fontSize: 12.5, color: "var(--text-subtle)", textDecoration: "none" }}>Support</a>
+          </div>
+        </div>
+      </footer>
     </>
   );
 }

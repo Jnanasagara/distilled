@@ -51,30 +51,43 @@ async function main() {
   }
   console.log(`✅ Seeded ${topics.length} topics`);
 
-  // Create default admin user
+  // Create/Update default admin user
   const adminEmail = process.env.ADMIN_EMAIL ?? "admin@distilled.app";
   const adminPassword = process.env.ADMIN_DEFAULT_PASSWORD;
   if (!adminPassword) throw new Error("ADMIN_DEFAULT_PASSWORD env var is required for seeding");
 
-  const existing = await prisma.user.findUnique({ where: { email: adminEmail } });
-  if (!existing) {
-    const hashedPassword = await bcrypt.hash(adminPassword, 10);
-    await prisma.user.create({
-      data: {
-        name: "Admin",
-        email: adminEmail,
-        password: hashedPassword,
-        emailVerified: new Date(),
-        role: "ADMIN",
-        onboarded: true,
-        mustChangePassword: true,
-      },
-    });
-    console.log(`✅ Admin user created: ${adminEmail} (default password: ${adminPassword})`);
-    console.log("⚠️  IMPORTANT: Change the admin password after first login!");
-  } else {
-    console.log(`ℹ️  Admin user already exists: ${adminEmail}`);
-  }
+  const hashedAdminPassword = await bcrypt.hash(adminPassword, 10);
+  await prisma.user.upsert({
+    where: { email: adminEmail },
+    update: { password: hashedAdminPassword },
+    create: {
+      name: "Admin",
+      email: adminEmail,
+      password: hashedAdminPassword,
+      role: "ADMIN",
+      emailVerified: new Date(),
+      mustChangePassword: true,
+    },
+  });
+  console.log(`✅ Admin user ready: ${adminEmail} (password: ${adminPassword})`);
+
+  // Create/Update default normal user
+  const userEmail = "user@distilled.app";
+  const userPassword = "UserPassword123";
+  const hashedUserPassword = await bcrypt.hash(userPassword, 10);
+  await prisma.user.upsert({
+    where: { email: userEmail },
+    update: { password: hashedUserPassword },
+    create: {
+      name: "Test User",
+      email: userEmail,
+      password: hashedUserPassword,
+      emailVerified: new Date(),
+      role: "USER",
+      onboarded: true,
+    },
+  });
+  console.log(`✅ Normal user ready: ${userEmail} (password: ${userPassword})`);
 }
 
 main()
