@@ -447,7 +447,7 @@ export default function LandingClient() {
               <span className="lp-h1-dim">for you.</span>
             </h1>
             <p className="lp-hero-sub">
-              Every hour, thousands of articles flood the web. Distilled reads them all so you don&apos;t have to —
+              Every hour, thousands of articles flood the web. Distilled reads them all so you don&apos;t have to -
               surfacing only what matters to <strong>you</strong>, with AI summaries and plain-English impact analysis.
             </p>
             <div className="lp-hero-actions">
@@ -511,7 +511,7 @@ export default function LandingClient() {
                 </div>
                 <div className="lp-mock-body">
                   <div className="lp-mock-topic">Geopolitics</div>
-                  <div className="lp-mock-title">India and EU finalise landmark trade deal — largest bilateral agreement in history</div>
+                  <div className="lp-mock-title">India and EU finalise landmark trade deal - largest bilateral agreement in history</div>
                 </div>
               </div>
             </div>
@@ -561,11 +561,11 @@ export default function LandingClient() {
               <p className="lp-overline">AI intelligence</p>
               <h2 className="lp-h2">Don&apos;t just read headlines.<br />Understand them.</h2>
               <p className="lp-h2-sub" style={{ marginBottom: 32 }}>
-                Every article gets a 2-sentence neutral summary and a plain-English &quot;how this affects you&quot; block — whether you&apos;re a developer, investor, or just curious.
+                Every article gets a 2-sentence neutral summary and a plain-English &quot;how this affects you&quot; block - whether you&apos;re a developer, investor, or just curious.
               </p>
               <div className="lp-feat-list">
                 {[
-                  "Neutral 2–3 sentence summary — no spin, no padding",
+                  "Neutral 2–3 sentence summary - no spin, no padding",
                   "\"How this affects you\" tailored to your specific interests",
                   "Tap ? on any card to see exactly why it appeared in your feed",
                 ].map((t) => (
@@ -579,7 +579,7 @@ export default function LandingClient() {
             <div className="lp-feat-visual">
               <div className="lp-impact-demo">
                 <div className="lp-impact-demo-card">
-                  <div className="lp-impact-demo-title">US Federal Reserve holds rates at 4.25% — signals two cuts before year-end</div>
+                  <div className="lp-impact-demo-title">US Federal Reserve holds rates at 4.25% - signals two cuts before year-end</div>
                   <div className="lp-impact-demo-text">Minutes showed broad consensus to wait for more inflation data before easing, despite recent CPI cooling to 2.3%.</div>
                   <div className="lp-impact-demo-block">
                     <div className="lp-impact-demo-block-label">How this affects you</div>
@@ -606,7 +606,7 @@ export default function LandingClient() {
               </p>
               <div className="lp-feat-list">
                 {[
-                  "No black-box algorithm — view and adjust topic weights yourself",
+                  "No black-box algorithm - view and adjust topic weights yourself",
                   "Fresh articles re-ranked every few hours from live sources",
                   "Trending stories surface automatically across all your interests",
                 ].map((t) => (
@@ -630,7 +630,7 @@ export default function LandingClient() {
               <div style={{ fontSize: 10, color: "var(--lp-sources-label)", marginBottom: 10, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase" }}>Your ranked feed</div>
               <div className="lp-feed-preview">
                 {[
-                  {dot:"#f97316",text:"Claude 4 Opus sets new MMLU-Pro record — what it means for devs",src:"HN"},
+                  {dot:"#f97316",text:"Claude 4 Opus sets new MMLU-Pro record - what it means for devs",src:"HN"},
                   {dot:"#0ea5e9",text:"TypeScript 6.0 ships with native ESM resolution and inferred generics",src:"Dev.to"},
                   {dot:"#10b981",text:"India-EU trade deal: sectors that gain most in 2026",src:"Atlas"},
                 ].map((row) => (
@@ -654,9 +654,9 @@ export default function LandingClient() {
             </div>
             <div className="lp-hiw-steps">
               {[
-                { num:"01", title:"Pick your interests", desc:"Choose from 20+ categories — AI, Finance, Security, Geopolitics, and more. Your personalised feed is built instantly around what you select." },
+                { num:"01", title:"Pick your interests", desc:"Choose from 20+ categories - AI, Finance, Security, Geopolitics, and more. Your personalised feed is built instantly around what you select." },
                 { num:"02", title:"Get your ranked feed", desc:"Distilled ingests articles every few hours and ranks them by relevance. AI summaries and impact blocks generate automatically on every card." },
-                { num:"03", title:"Read on your schedule", desc:"Dip in whenever you like, or receive a curated email digest — daily, weekly, or monthly — with only the highlights that actually matter to you." },
+                { num:"03", title:"Read on your schedule", desc:"Dip in whenever you like, or receive a curated email digest - daily, weekly, or monthly - with only the highlights that actually matter to you." },
               ].map((s) => (
                 <div key={s.num} className="lp-step">
                   <div className="lp-step-num">{s.num}</div>
@@ -679,7 +679,7 @@ export default function LandingClient() {
             <div className="lp-grid-card">
               <span className="lp-grid-card-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
               <div className="lp-grid-card-title">Email digests that don&apos;t suck</div>
-              <div className="lp-grid-card-desc">Daily, weekly, or monthly — each digest ships only the articles you&apos;d actually open, with summaries already included.</div>
+              <div className="lp-grid-card-desc">Daily, weekly, or monthly - each digest ships only the articles you&apos;d actually open, with summaries already included.</div>
               <div className="lp-digest-demo">
                 <div className="lp-digest-header">
                   <div className="lp-digest-from">From: <strong>Distilled Weekly</strong> · Your 5 top stories</div>
@@ -694,12 +694,12 @@ export default function LandingClient() {
             <div className="lp-grid-card">
               <span className="lp-grid-card-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="1.8"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span>
               <div className="lp-grid-card-title">Save for later</div>
-              <div className="lp-grid-card-desc">Bookmark any article in one tap. Your saved list is always there — synced across devices and fully searchable.</div>
+              <div className="lp-grid-card-desc">Bookmark any article in one tap. Your saved list is always there - synced across devices and fully searchable.</div>
             </div>
             <div className="lp-grid-card">
               <span className="lp-grid-card-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="1.8"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span>
               <div className="lp-grid-card-title">Light &amp; dark mode</div>
-              <div className="lp-grid-card-desc">Toggle freely or follow your system preference. Both themes are crafted from scratch — not just an inverted palette.</div>
+              <div className="lp-grid-card-desc">Toggle freely or follow your system preference. Both themes are crafted from scratch - not just an inverted palette.</div>
             </div>
           </div>
         </section>

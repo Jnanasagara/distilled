@@ -452,7 +452,7 @@ export default function FeedClient() {
     }
   }, [session?.user?.id]);
 
-  // Screen time nudge — fires once after 30 minutes of continuous reading
+  // Screen time nudge - fires once after 30 minutes of continuous reading
   useEffect(() => {
     const THIRTY_MIN = 30 * 60 * 1000;
     const t = setTimeout(() => setShowScreenNudge(true), THIRTY_MIN);

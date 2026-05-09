@@ -13,7 +13,7 @@ const STEPS = [
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <p style={{ fontSize: 14, color: "var(--text-muted)", lineHeight: 1.7, margin: 0 }}>
           Distilled reads thousands of articles every day and surfaces only what matters
-          to <strong style={{ color: "var(--text-heading)" }}>you</strong> — with AI summaries
+          to <strong style={{ color: "var(--text-heading)" }}>you</strong> - with AI summaries
           and plain-English impact analysis on every card.
         </p>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
@@ -86,7 +86,7 @@ const STEPS = [
           {
             icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
             title: "Choose your digest frequency",
-            desc: "Receive a curated email digest daily, weekly, or monthly — only the highlights that matter.",
+            desc: "Receive a curated email digest daily, weekly, or monthly - only the highlights that matter.",
           },
           {
             icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,

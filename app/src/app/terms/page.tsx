@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import ThemeToggle from "@/components/ThemeToggle";
 
-export const metadata = { title: "Terms of Service — Distilled", description: "The rules for using Distilled, our AI-curated news reader." };
+export const metadata = { title: "Terms of Service - Distilled", description: "The rules for using Distilled, our AI-curated news reader." };
 
 export default function TermsPage() {
   return (
@@ -133,7 +133,7 @@ export default function TermsPage() {
           <div id="t-section-7" className="legal-section">
             <h2 className="legal-h2">7. Disclaimer of warranties</h2>
             <p className="legal-p">The Service is provided "as is" and "as available" without any warranties of any kind, express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, or non-infringement.</p>
-            <p className="legal-p">We do not warrant that the Service will be uninterrupted, error-free, or free of viruses or other harmful components. AI-generated summaries may contain inaccuracies — always verify important information from the original source.</p>
+            <p className="legal-p">We do not warrant that the Service will be uninterrupted, error-free, or free of viruses or other harmful components. AI-generated summaries may contain inaccuracies - always verify important information from the original source.</p>
           </div>
 
           <div id="t-section-8" className="legal-section">

@@ -1112,7 +1112,7 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
                             <div className="adm-user-cell">
                               <div className="adm-avatar">{(user.name ?? user.email).slice(0, 2).toUpperCase()}</div>
                               <div>
-                                <div className="adm-user-name">{user.name ?? "—"}</div>
+                                <div className="adm-user-name">{user.name ?? "-"}</div>
                                 <div className="adm-user-email">{user.email}</div>
                               </div>
                             </div>
@@ -1152,7 +1152,7 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
                                 )}
                               </div>
                             ) : (
-                              <span style={{ fontSize: 12, color: "var(--text-subtle)" }}>—</span>
+                              <span style={{ fontSize: 12, color: "var(--text-subtle)" }}>-</span>
                             )}
                           </td>
                         </tr>
@@ -1276,7 +1276,7 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
                     <div key={report.id} className={`adm-report-item ${report.status === "OPEN" ? "open" : "resolved"}`}>
                       <div className="adm-report-header">
                         <div>
-                          <div className="adm-report-user">{report.user.name ?? "—"}</div>
+                          <div className="adm-report-user">{report.user.name ?? "-"}</div>
                           <div className="adm-report-email">{report.user.email}</div>
                         </div>
                         <div className="adm-report-date">

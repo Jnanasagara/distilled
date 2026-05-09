@@ -92,7 +92,7 @@ export default function GlobalError({
         <div className="error-code">500</div>
         <div className="error-title">Something went wrong</div>
         <p className="error-subtitle">
-          An unexpected error occurred. Try refreshing the page — if it keeps happening, check back shortly.
+          An unexpected error occurred. Try refreshing the page. If it keeps happening, check back shortly.
         </p>
         {error.digest && (
           <p className="error-digest">Error ID: {error.digest}</p>
