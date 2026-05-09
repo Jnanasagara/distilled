@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import NavBar from "./NavBar";
+import UserFooter from "./UserFooter";
 import AvatarPicker from "./AvatarPicker";
 import { avatarUrl } from "@/lib/avatars";
 import {
@@ -1013,6 +1014,8 @@ export default function ProfileClient() {
           </>
         )}
       </div>
+
+      <UserFooter />
     </>
   );
 }

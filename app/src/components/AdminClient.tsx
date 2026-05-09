@@ -836,7 +836,7 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
                 },
                 {
                   icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
-                  label: "Broadcast Message", desc: "Send banner or email to all users", action: () => { setActiveTab("dashboard"); setTimeout(() => document.querySelector(".ann-form")?.scrollIntoView({ behavior: "smooth" }), 100); },
+                  label: "Broadcast Message", desc: "Send banner or email to all users", action: () => { setActiveTab("dashboard"); setTimeout(() => { const el = document.querySelector(".ann-form"); if (!el) return; const navH = (document.querySelector(".adm-navbar") as HTMLElement)?.offsetHeight ?? 64; const tabH = (document.querySelector(".adm-tabbar") as HTMLElement)?.offsetHeight ?? 48; const top = el.getBoundingClientRect().top + window.scrollY - navH - tabH - 12; window.scrollTo({ top, behavior: "smooth" }); }, 100); },
                 },
               ].map((qa) => (
                 <button key={qa.label} className="adm-qa-btn" onClick={qa.action}>

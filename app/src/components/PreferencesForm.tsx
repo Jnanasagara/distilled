@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
+import UserFooter from "./UserFooter";
 
 type Topic = {
   id: string;
@@ -754,6 +755,8 @@ export default function PreferencesForm({
           {saving ? "Saving..." : mode === "onboarding" ? "Take me to my feed →" : "Save Preferences"}
         </button>
       </div>
+
+      {mode === "preferences" && <UserFooter />}
     </>
   );
 }
