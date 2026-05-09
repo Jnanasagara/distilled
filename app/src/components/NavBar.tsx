@@ -7,7 +7,7 @@ import ThemeToggle from "./ThemeToggle";
 import AnnouncementBanner from "./AnnouncementBanner";
 import { avatarUrl } from "@/lib/avatars";
 
-type Page = "feed" | "saved" | "history" | "profile" | "preferences";
+type Page = "feed" | "saved" | "history" | "profile";
 
 const NAV_ITEMS: { page: Page; label: string; href: string; icon: React.ReactNode }[] = [
   {
@@ -50,18 +50,6 @@ const NAV_ITEMS: { page: Page; label: string; href: string; icon: React.ReactNod
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
         <circle cx="12" cy="7" r="4" />
-      </svg>
-    ),
-  },
-  {
-    page: "preferences",
-    label: "Preferences",
-    href: "/preferences",
-    icon: (
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="3" />
-        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14" />
-        <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
       </svg>
     ),
   },
