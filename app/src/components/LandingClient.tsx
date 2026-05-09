@@ -394,6 +394,10 @@ export default function LandingClient() {
             .lp-sources { padding:14px 24px; }
           }
           @media (max-width: 640px) {
+            .lp-nav { padding:0 16px; }
+            .lp-nav-signin { display:none; }
+            .lp-nav-divider { display:none; }
+            .lp-nav-cta { padding:7px 12px; font-size:12px; }
             .lp-h1 { letter-spacing:-2px; }
             .lp-hero-actions { flex-direction:column; align-items:flex-start; }
             .lp-hero-proof { gap:8px; }
