@@ -1,0 +1,46 @@
+{
+  "name": "app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "prisma migrate deploy && next start",
+    "lint": "eslint",
+    "db:seed": "tsx prisma/seed.ts",
+    "worker": "tsx worker-standalone.ts"
+  },
+  "dependencies": {
+    "@google/genai": "^1.46.0",
+    "@prisma/client": "^5.22.0",
+    "axios": "^1.13.6",
+    "bcrypt": "^6.0.0",
+    "bullmq": "^5.71.0",
+    "cheerio": "^1.2.0",
+    "ioredis": "^5.10.1",
+    "next": "16.1.6",
+    "next-auth": "^4.24.13",
+    "openai": "^6.34.0",
+    "prisma": "^5.22.0",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "recharts": "^3.8.1",
+    "resend": "^6.10.0",
+    "rss-parser": "^3.13.0",
+    "tsx": "^4.21.0",
+    "web-push": "^3.6.7"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/bcrypt": "^6.0.0",
+    "@types/cheerio": "^0.22.35",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/web-push": "^3.6.4",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
