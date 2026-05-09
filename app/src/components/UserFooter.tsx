@@ -48,7 +48,6 @@ export default function UserFooter() {
         .user-footer-copy {
           font-size: 12px;
           color: var(--text-subtle);
-          padding-left: 32px;
         }
         .user-footer-disclaimer {
           flex: 2;
@@ -83,7 +82,6 @@ export default function UserFooter() {
           .user-footer-inner { flex-direction: column; align-items: flex-start; gap: 14px; padding: 16px; }
           .user-footer-disclaimer { text-align: left; padding: 0; }
           .user-footer-links { align-items: flex-start; }
-          .user-footer-copy { padding-left: 32px; }
         }
       `}</style>
 
