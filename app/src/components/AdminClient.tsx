@@ -331,6 +331,17 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
   }
 
   const openReportCount = reports.filter((r) => r.status === "OPEN").length;
+  const activeAnnouncementCount = announcements.filter((a) => a.isActive).length;
+
+  function jumpToTab(tab: Tab) {
+    setActiveTab(tab);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function scrollToSection(id: string) {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   return (
     <>
@@ -347,7 +358,7 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
         }
         .adm-navbar.scrolled { border-bottom-color: var(--border-default); box-shadow: var(--shadow-navbar); }
         .adm-navbar-inner {
-          max-width: 1100px; margin: 0 auto; padding: 14px 24px;
+          width: 100%; padding: 14px 24px;
           display: flex; justify-content: space-between; align-items: center;
         }
         .adm-brand { display: flex; align-items: center; gap: 10px; }
@@ -376,7 +387,7 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
           border-bottom: 1px solid var(--border-default);
         }
         .adm-tabs {
-          max-width: 1100px; margin: 0 auto; padding: 0 24px;
+          width: 100%; padding: 0 24px;
           display: flex; overflow-x: auto;
           -webkit-overflow-scrolling: touch; scrollbar-width: none;
         }
@@ -400,7 +411,31 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
         }
 
         /* ===== LAYOUT ===== */
-        .adm-container { max-width: 1100px; margin: 0 auto; padding: 28px 24px 80px; display: flex; flex-direction: column; gap: 20px; }
+        .adm-container { width: 100%; padding: 28px 24px 80px; display: flex; flex-direction: column; gap: 20px; }
+
+        /* ===== OVERVIEW ===== */
+        .adm-overview-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .adm-overview-card {
+          border: 1.5px solid var(--border-default); border-radius: 14px;
+          padding: 16px 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+          background: var(--bg-card);
+        }
+        .adm-overview-label { font-size: 11px; font-weight: 600; color: var(--text-subtle); text-transform: uppercase; letter-spacing: 0.05em; }
+        .adm-overview-value { font-size: 22px; font-weight: 800; color: var(--text-heading); letter-spacing: -0.5px; margin-top: 6px; }
+        .adm-overview-icon {
+          width: 36px; height: 36px; border-radius: 10px;
+          display: flex; align-items: center; justify-content: center;
+          background: var(--bg-elevated); color: var(--text-muted);
+        }
+
+        .adm-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .adm-action-btn {
+          display: inline-flex; align-items: center; gap: 8px;
+          padding: 8px 14px; border-radius: 10px; border: 1.5px solid var(--border-default);
+          background: var(--bg-card); font-family: inherit; font-size: 12px; font-weight: 600;
+          color: var(--text-muted); cursor: pointer; transition: all 0.2s; white-space: nowrap;
+        }
+        .adm-action-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--bg-accent); }
 
         /* ===== WARNING ===== */
         .adm-warning {
@@ -676,6 +711,7 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
         @media (max-width: 768px) {
           .adm-stats { grid-template-columns: repeat(2, 1fr); }
           .adm-analytics-totals { grid-template-columns: repeat(2, 1fr); }
+          .adm-overview-grid { grid-template-columns: repeat(2, 1fr); }
           .adm-navbar-inner { padding: 12px 16px; }
           .adm-tabbar .adm-tabs { padding: 0 16px; }
           .adm-container { padding: 16px 16px 60px; }
@@ -734,6 +770,94 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
         {/* ===== DASHBOARD TAB ===== */}
         {activeTab === "dashboard" && (
           <>
+            <div className="adm-card">
+              <div className="adm-card-header">
+                <div>
+                  <div className="adm-card-title">Admin Overview</div>
+                  <div className="adm-card-subtitle">Key activity signals and quick actions</div>
+                </div>
+                <div className="adm-actions">
+                  <button className="adm-action-btn" onClick={() => jumpToTab("users")}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="9" cy="7" r="4" /><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    </svg>
+                    Manage users
+                  </button>
+                  <button className="adm-action-btn" onClick={() => jumpToTab("content")}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M4 4h16v16H4z" /><path d="M8 8h8M8 12h6M8 16h4" />
+                    </svg>
+                    Moderate content
+                  </button>
+                  <button className="adm-action-btn" onClick={() => jumpToTab("reports")}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                      <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                    Review reports
+                  </button>
+                  <button className="adm-action-btn" onClick={() => scrollToSection("adm-announcements") }>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M22 8v8" /><path d="M6 8v8" /><path d="M2 12h20" /><path d="M14 12a2 2 0 1 0-4 0" />
+                    </svg>
+                    Create announcement
+                  </button>
+                </div>
+              </div>
+
+              <div className="adm-overview-grid">
+                <div className="adm-overview-card">
+                  <div>
+                    <div className="adm-overview-label">Active users (7d)</div>
+                    <div className="adm-overview-value">
+                      {analytics ? analytics.totals.active7d : "--"}
+                    </div>
+                  </div>
+                  <div className="adm-overview-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M16 11V5a4 4 0 0 0-8 0v6" /><path d="M12 22a2 2 0 0 1-2-2v-6h4v6a2 2 0 0 1-2 2z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="adm-overview-card">
+                  <div>
+                    <div className="adm-overview-label">Open reports</div>
+                    <div className="adm-overview-value">{openReportCount}</div>
+                  </div>
+                  <div className="adm-overview-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                      <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="adm-overview-card">
+                  <div>
+                    <div className="adm-overview-label">Content indexed</div>
+                    <div className="adm-overview-value">
+                      {contentLoading ? "--" : contentTotal.toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="adm-overview-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M4 6h16" /><path d="M4 12h16" /><path d="M4 18h16" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="adm-overview-card">
+                  <div>
+                    <div className="adm-overview-label">Active announcements</div>
+                    <div className="adm-overview-value">{activeAnnouncementCount}</div>
+                  </div>
+                  <div className="adm-overview-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M4 4h16v6H4z" /><path d="M4 14h16v6H4z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Analytics */}
             <div className="adm-card">
               <div className="adm-card-header">
@@ -811,7 +935,7 @@ export default function AdminClient({ mustChangePassword }: { mustChangePassword
             </div>
 
             {/* Announcements */}
-            <div className="adm-card">
+            <div className="adm-card" id="adm-announcements">
               <div className="adm-card-header">
                 <div>
                   <div className="adm-card-title">Announcements</div>

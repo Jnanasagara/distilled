@@ -331,14 +331,28 @@ export default async function Home() {
         .lp-cta-note { font-size: 12px; color: rgba(255,255,255,0.2); margin-top: 14px; }
 
         /* ── FOOTER ── */
-        .lp-footer-wrap { border-top: 1px solid #141414; }
+        .lp-footer-wrap { border-top: 1px solid #141414; background: #0b0b0b; }
         .lp-footer {
-          max-width: 1100px; margin: 0 auto; padding: 24px 40px;
-          display: flex; align-items: center; justify-content: space-between;
-          font-size: 12.5px; color: rgba(255,255,255,0.2);
+          max-width: 1100px; margin: 0 auto; padding: 36px 40px 40px;
+          display: grid; grid-template-columns: 1.2fr repeat(3, 1fr); gap: 24px;
+          font-size: 12.5px; color: rgba(255,255,255,0.28);
         }
-        .lp-footer a { color: rgba(255,255,255,0.2); text-decoration: none; transition: color 0.15s; }
-        .lp-footer a:hover { color: rgba(255,255,255,0.5); }
+        .lp-footer-brand { display: flex; align-items: flex-start; gap: 12px; }
+        .lp-footer-logo {
+          width: 30px; height: 30px; border-radius: 8px;
+          overflow: hidden; flex-shrink: 0;
+        }
+        .lp-footer-logo img { width: 100%; height: 100%; display: block; }
+        .lp-footer-title { font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.85); margin-bottom: 6px; }
+        .lp-footer-text { font-size: 12.5px; line-height: 1.6; color: rgba(255,255,255,0.35); margin-bottom: 10px; }
+        .lp-footer-meta { font-size: 12px; color: rgba(255,255,255,0.35); }
+        .lp-footer-col-title {
+          font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+          color: rgba(255,255,255,0.45); font-weight: 700; margin-bottom: 10px;
+        }
+        .lp-footer-col { display: flex; flex-direction: column; gap: 8px; }
+        .lp-footer-link { color: rgba(255,255,255,0.3); text-decoration: none; transition: color 0.15s; }
+        .lp-footer-link:hover { color: rgba(255,255,255,0.65); }
 
         /* ── RESPONSIVE ── */
         @media (max-width: 900px) {
@@ -353,6 +367,7 @@ export default async function Home() {
           .lp-section-sm { padding: 0 24px 60px; }
           .lp-hiw { padding: 60px 24px; }
           .lp-cta { padding: 60px 24px; }
+          .lp-footer { grid-template-columns: 1fr 1fr; }
         }
         @media (max-width: 640px) {
           .lp-nav { padding: 0 20px; }
@@ -360,7 +375,7 @@ export default async function Home() {
           .lp-h1 { letter-spacing: -1.5px; }
           .lp-hero-actions { flex-direction: column; align-items: flex-start; }
           .lp-sources { padding: 14px 20px; }
-          .lp-footer { flex-direction: column; gap: 8px; text-align: center; padding: 20px; }
+          .lp-footer { grid-template-columns: 1fr; text-align: left; padding: 24px 20px 28px; }
           .lp-hero-proof { gap: 8px; }
           .lp-proof-item { border-right: none; padding-right: 0; margin-right: 0; }
         }
@@ -671,11 +686,35 @@ export default async function Home() {
       {/* ── FOOTER ── */}
       <div className="lp-footer-wrap">
         <div className="lp-footer">
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ width: 20, height: 20, borderRadius: 5, overflow: "hidden", flexShrink: 0 }}><img src="/android-chrome-192x192.png" alt="Distilled" style={{ width: "100%", height: "100%", display: "block" }} /></div>
-            <span>Distilled · © 2026</span>
+          <div className="lp-footer-brand">
+            <div className="lp-footer-logo"><img src="/android-chrome-192x192.png" alt="Distilled" /></div>
+            <div>
+              <div className="lp-footer-title">Distilled</div>
+              <div className="lp-footer-text">Personalized, AI-ranked reading that helps teams and individuals stay current without the noise.</div>
+              <div className="lp-footer-meta">support@distilled.blog · © 2026</div>
+            </div>
           </div>
-          <a href="mailto:support@distilled.blog">support@distilled.blog</a>
+
+          <div className="lp-footer-col">
+            <div className="lp-footer-col-title">Product</div>
+            <a className="lp-footer-link" href="#how-it-works">How it works</a>
+            <Link className="lp-footer-link" href="/auth">Get started</Link>
+            <Link className="lp-footer-link" href="/auth">Sign in</Link>
+          </div>
+
+          <div className="lp-footer-col">
+            <div className="lp-footer-col-title">Company</div>
+            <a className="lp-footer-link" href="mailto:support@distilled.blog">Contact</a>
+            <a className="lp-footer-link" href="mailto:support@distilled.blog">Support</a>
+            <a className="lp-footer-link" href="mailto:support@distilled.blog">Press</a>
+          </div>
+
+          <div className="lp-footer-col">
+            <div className="lp-footer-col-title">Legal</div>
+            <a className="lp-footer-link" href="/privacy">Privacy Policy</a>
+            <a className="lp-footer-link" href="/terms">Terms of Service</a>
+            <a className="lp-footer-link" href="/unsubscribed">Email preferences</a>
+          </div>
         </div>
       </div>
     </main>

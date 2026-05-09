@@ -147,7 +147,7 @@ export default function NavBar({ currentPage }: { currentPage: Page }) {
         .app-navbar.scrolled { border-bottom-color: var(--border-default); }
 
         .app-navbar-inner {
-          max-width: 1200px; margin: 0 auto;
+          width: 100%;
           padding: 0 24px; height: 56px;
           display: flex; justify-content: space-between; align-items: center;
         }

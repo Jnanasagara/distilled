@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import NavBar from "./NavBar";
+import UserFooter from "./UserFooter";
 
 type Article = {
   id: string;
@@ -277,6 +278,8 @@ export default function HistoryClient() {
           </>
         )}
       </div>
+
+      <UserFooter />
     </>
   );
 }

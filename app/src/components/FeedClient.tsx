@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useSession } from "next-auth/react";
 import NavBar from "./NavBar";
+import UserFooter from "./UserFooter";
 import WelcomeModal from "./WelcomeModal";
 import InterestCheckModal from "./InterestCheckModal";
 
@@ -1116,6 +1117,8 @@ export default function FeedClient() {
           </>
         )}
       </div>
+
+      <UserFooter />
     </>
   );
 }
