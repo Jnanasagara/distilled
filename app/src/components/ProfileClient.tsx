@@ -294,6 +294,19 @@ export default function ProfileClient() {
         .prof-stat-value { font-size: 32px; font-weight: 800; color: var(--primary); letter-spacing: -1px; }
         .prof-stat-label { font-size: 13px; color: var(--text-subtle); margin-top: 4px; font-weight: 500; }
 
+        /* Preferences link card */
+        .prof-pref-link {
+          display: flex; align-items: center; justify-content: space-between;
+          text-decoration: none; color: inherit;
+          transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .prof-pref-link:hover { border-color: var(--primary); box-shadow: 0 0 0 2px var(--bg-accent); }
+        .prof-pref-left { display: flex; align-items: center; gap: 14px; }
+        .prof-pref-icon {
+          width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+          background: var(--bg-accent); display: flex; align-items: center; justify-content: center;
+        }
+
         /* Chart cards */
         .prof-card {
           background: var(--bg-card); border-radius: 12px;
@@ -638,6 +651,25 @@ export default function ProfileClient() {
               </div>
             </div>
 
+            {/* Preferences shortcut */}
+            <a href="/preferences" className="prof-card prof-pref-link">
+              <div className="prof-pref-left">
+                <div className="prof-pref-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2">
+                    <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+                    <path d="M12 2v2m0 16v2M2 12h2m16 0h2"/>
+                  </svg>
+                </div>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-heading)", marginBottom: 2 }}>Preferences</div>
+                  <div style={{ fontSize: 13, color: "var(--text-subtle)" }}>Topics, digest frequency, notifications</div>
+                </div>
+              </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-subtle)" strokeWidth="2">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </a>
+
             {/* Reading Habits */}
             <div className="prof-card">
               <div className="prof-card-title">Reading Habits</div>
@@ -940,15 +972,17 @@ export default function ProfileClient() {
               {data.weeklyActivity.length === 0 ? (
                 <div className="prof-empty">No activity recorded yet. Start reading to see your trends!</div>
               ) : (
-                <ResponsiveContainer width="100%" height={260}>
+                <ResponsiveContainer width="100%" height={280}>
                   <LineChart data={data.weeklyActivity} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border-divider)" />
                     <XAxis dataKey="week" tick={{ fontSize: 11, fill: "var(--text-subtle)" }} tickLine={false} axisLine={false} />
                     <YAxis tick={{ fontSize: 11, fill: "var(--text-subtle)" }} tickLine={false} axisLine={false} allowDecimals={false} />
                     <Tooltip
-                      contentStyle={{ background: "var(--bg-card)", border: "1px solid var(--border-default)", borderRadius: 10, fontSize: 13 }}
+                      contentStyle={{ background: "var(--bg-card)", border: "1px solid var(--border-default)", borderRadius: 10, fontSize: 12, maxWidth: 220 }}
+                      wrapperStyle={{ zIndex: 50, pointerEvents: "none" }}
+                      allowEscapeViewBox={{ x: false, y: true }}
                     />
-                    <Legend wrapperStyle={{ fontSize: 12, paddingTop: 12 }} />
+                    <Legend verticalAlign="top" wrapperStyle={{ fontSize: 11, paddingBottom: 12, lineHeight: "20px" }} />
                     {data.weeklyTopicNames.map((topic, i) => (
                       <Line
                         key={topic}

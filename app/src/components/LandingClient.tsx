@@ -206,7 +206,7 @@ export default function LandingClient() {
 
           /* ── NAV ── */
           .lp-nav {
-            display: flex; align-items: center; justify-content: space-between;
+            display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
             padding: 0 40px; height: 64px;
             border-bottom: 1px solid var(--lp-nav-border);
             position: sticky; top: 0; z-index: 50;
@@ -226,8 +226,8 @@ export default function LandingClient() {
             background: linear-gradient(135deg, #fb923c 0%, #f97316 50%, #fbbf24 100%);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
           }
-          .lp-nav-right { display: flex; align-items: center; gap: 10px; }
-          .lp-nav-links { display: flex; align-items: center; gap: 2px; }
+          .lp-nav-right { display: flex; align-items: center; gap: 10px; justify-content: flex-end; }
+          .lp-nav-links { display: flex; align-items: center; gap: 2px; justify-content: center; }
           .lp-nav-link { font-size: 13.5px; font-weight: 500; color: var(--lp-signin-color); text-decoration: none; padding: 6px 13px; border-radius: 8px; transition: color 0.15s, background 0.15s; white-space: nowrap; }
           .lp-nav-link:hover { color: var(--lp-text); background: rgba(128,100,60,0.08); }
           [data-theme="dark"] .lp-nav-link:hover { background: rgba(255,255,255,0.07); }
@@ -389,7 +389,7 @@ export default function LandingClient() {
 
           /* ── RESPONSIVE ── */
           @media (max-width: 960px) {
-            .lp-nav { padding:0 24px; }
+            .lp-nav { padding:0 24px; grid-template-columns: auto 1fr; }
             .lp-nav-links { display:none; }
             .lp-hero { grid-template-columns:1fr; padding:72px 24px 56px; gap:48px; }
             .lp-hero-sub { max-width:100%; }
@@ -407,7 +407,7 @@ export default function LandingClient() {
             .lp-sources { padding:14px 24px; }
           }
           @media (max-width: 640px) {
-            .lp-nav { padding:0 16px; }
+            .lp-nav { padding:0 16px; grid-template-columns: auto 1fr; }
             .lp-nav-signin { display:none; }
             .lp-nav-divider { display:none; }
             .lp-nav-cta { padding:7px 12px; font-size:12px; }

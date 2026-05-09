@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import NavBar from "./NavBar";
 import WelcomeModal from "./WelcomeModal";
 import InterestCheckModal from "./InterestCheckModal";
+import UserFooter from "./UserFooter";
 import { SOURCE_COLORS, FALLBACK_GRADIENTS, SOURCE_FALLBACK_IMAGES, SOURCE_LABELS, SOURCE_EMOJI, timeAgo } from "@/lib/article-utils";
 
 type Article = {
@@ -748,21 +749,6 @@ export default function FeedClient() {
         @keyframes spin { to { transform: rotate(360deg); } }
         .meta-read-time { color: var(--text-subtle); font-size: 11px; }
 
-        /* ===== FOOTER ===== */
-        .app-footer {
-          border-top: 1px solid var(--border-divider);
-          margin-top: 48px; padding: 28px 0 0;
-          display: flex; align-items: center; justify-content: space-between;
-          flex-wrap: wrap; gap: 12px;
-        }
-        .app-footer-brand { display: flex; align-items: center; gap: 8px; }
-        .app-footer-logo { width: 24px; height: 24px; border-radius: 6px; background: #fff; overflow: hidden; flex-shrink: 0; box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
-        .app-footer-logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
-        .app-footer-name { font-size: 13px; font-weight: 700; background: linear-gradient(135deg,#f97316,#ea580c); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
-        .app-footer-copy { font-size: 12px; color: var(--text-subtle); }
-        .app-footer-links { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-        .app-footer-link { font-size: 12px; color: var(--text-subtle); text-decoration: none; transition: color 0.15s; }
-        .app-footer-link:hover { color: var(--primary); }
 
         /* ===== RESPONSIVE ===== */
         @media (max-width: 640px) {
@@ -770,7 +756,6 @@ export default function FeedClient() {
           .feed-greeting { font-size: 24px; }
           .card-title { font-size: 15px; }
           .card-dismiss-btn { opacity: 0.75; }
-          .app-footer { flex-direction: column; align-items: flex-start; gap: 8px; }
         }
 
         /* ===== TOASTS ===== */
@@ -993,24 +978,8 @@ export default function FeedClient() {
           </>
         )}
 
-        <footer className="app-footer">
-          <div style={{ display:"flex", alignItems:"center", gap:16, flexWrap:"wrap" }}>
-            <div className="app-footer-brand">
-              <div className="app-footer-logo"><img src="/logo.jpeg" alt="Distilled" /></div>
-              <span className="app-footer-name">Distilled</span>
-            </div>
-            <span className="app-footer-copy">© {new Date().getFullYear()} Distilled. All rights reserved.</span>
-          </div>
-          <div className="app-footer-links">
-            <a href="/profile" className="app-footer-link">Profile</a>
-            <a href="/saved" className="app-footer-link">Saved</a>
-            <a href="/history" className="app-footer-link">History</a>
-            <a href="/privacy" className="app-footer-link">Privacy</a>
-            <a href="/terms" className="app-footer-link">Terms</a>
-            <a href="mailto:support@distilled.blog" className="app-footer-link">Support</a>
-          </div>
-        </footer>
       </div>
+      <UserFooter />
     </>
   );
 }

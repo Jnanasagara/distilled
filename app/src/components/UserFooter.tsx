@@ -10,67 +10,80 @@ export default function UserFooter() {
         .user-footer-inner {
           max-width: 1200px;
           margin: 0 auto;
-          padding: 18px 24px 28px;
+          padding: 20px 24px 28px;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 18px;
+          gap: 16px;
+          flex-wrap: wrap;
+        }
+        .user-footer-left {
+          display: flex;
+          align-items: center;
+          gap: 16px;
           flex-wrap: wrap;
         }
         .user-footer-brand {
           display: flex;
           align-items: center;
-          gap: 10px;
-          font-size: 12px;
-          color: var(--text-subtle);
+          gap: 8px;
         }
         .user-footer-logo {
-          width: 22px;
-          height: 22px;
+          width: 24px;
+          height: 24px;
           border-radius: 6px;
+          background: #fff;
           overflow: hidden;
           flex-shrink: 0;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.12);
         }
-        .user-footer-logo img { width: 100%; height: 100%; display: block; }
-        .user-footer-disclaimer {
+        .user-footer-logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
+        .user-footer-name {
+          font-size: 13px;
+          font-weight: 700;
+          background: linear-gradient(135deg,#f97316,#ea580c);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+        .user-footer-copy {
           font-size: 12px;
           color: var(--text-subtle);
-          line-height: 1.6;
-          max-width: 520px;
         }
         .user-footer-links {
           display: flex;
           align-items: center;
-          gap: 12px;
-          font-size: 12px;
+          gap: 16px;
+          flex-wrap: wrap;
         }
         .user-footer-links a {
-          color: var(--text-muted);
+          font-size: 12px;
+          color: var(--text-subtle);
           text-decoration: none;
-          font-weight: 600;
+          transition: color 0.15s;
         }
-        .user-footer-links a:hover { color: var(--text-heading); }
+        .user-footer-links a:hover { color: var(--primary); }
 
         @media (max-width: 640px) {
-          .user-footer-inner { padding: 16px; }
+          .user-footer-inner { padding: 16px; flex-direction: column; align-items: flex-start; gap: 12px; }
         }
       `}</style>
 
       <footer className="user-footer">
         <div className="user-footer-inner">
-          <div className="user-footer-brand">
-            <div className="user-footer-logo">
-              <img src="/android-chrome-192x192.png" alt="Distilled" />
+          <div className="user-footer-left">
+            <div className="user-footer-brand">
+              <div className="user-footer-logo">
+                <img src="/logo.jpeg" alt="Distilled" />
+              </div>
+              <span className="user-footer-name">Distilled</span>
             </div>
-            <span>Distilled · © 2026</span>
-          </div>
-          <div className="user-footer-disclaimer">
-            Content is sourced from third-party publishers. Summaries are AI-generated for informational purposes. All trademarks and copyrights belong to their respective owners.
+            <span className="user-footer-copy">© {new Date().getFullYear()} Distilled. All rights reserved.</span>
           </div>
           <div className="user-footer-links">
-            <a href="mailto:support@distilled.blog">Support</a>
             <a href="/privacy">Privacy</a>
             <a href="/terms">Terms</a>
+            <a href="mailto:support@distilled.blog">Support</a>
           </div>
         </div>
       </footer>
