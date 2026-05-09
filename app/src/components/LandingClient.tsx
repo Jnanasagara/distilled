@@ -1,6 +1,19 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, memo } from "react";
+
+const FeatureList = memo(function FeatureList({ items }: { items: string[] }) {
+  return (
+    <div className="lp-feat-list">
+      {items.map((t) => (
+        <div key={t} className="lp-feat-list-item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="2.5" style={{ marginTop: 3, flexShrink: 0 }}><polyline points="20 6 9 17 4 12"/></svg>
+          <span className="lp-feat-list-text">{t}</span>
+        </div>
+      ))}
+    </div>
+  );
+});
 import Link from "next/link";
 import Image from "next/image";
 import LogoIntro from "./LogoIntro";
@@ -567,18 +580,11 @@ export default function LandingClient() {
               <p className="lp-h2-sub" style={{ marginBottom: 32 }}>
                 Every article gets a 2-sentence neutral summary and a plain-English &quot;how this affects you&quot; block - whether you&apos;re a developer, investor, or just curious.
               </p>
-              <div className="lp-feat-list">
-                {[
-                  "Neutral 2–3 sentence summary - no spin, no padding",
-                  "\"How this affects you\" tailored to your specific interests",
-                  "Tap ? on any card to see exactly why it appeared in your feed",
-                ].map((t) => (
-                  <div key={t} className="lp-feat-list-item">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="2.5" style={{ marginTop: 3, flexShrink: 0 }}><polyline points="20 6 9 17 4 12"/></svg>
-                    <span className="lp-feat-list-text">{t}</span>
-                  </div>
-                ))}
-              </div>
+              <FeatureList items={[
+                "Neutral 2–3 sentence summary - no spin, no padding",
+                "\"How this affects you\" tailored to your specific interests",
+                "Tap ? on any card to see exactly why it appeared in your feed",
+              ]} />
             </div>
             <div className="lp-feat-visual">
               <div className="lp-impact-demo">
@@ -608,18 +614,11 @@ export default function LandingClient() {
               <p className="lp-h2-sub" style={{ marginBottom: 32 }}>
                 Pick your topics on day one. As you like, save, and read, Distilled quietly re-weights its algorithm to surface more of what actually captures you.
               </p>
-              <div className="lp-feat-list">
-                {[
-                  "No black-box algorithm - view and adjust topic weights yourself",
-                  "Fresh articles re-ranked every few hours from live sources",
-                  "Trending stories surface automatically across all your interests",
-                ].map((t) => (
-                  <div key={t} className="lp-feat-list-item">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="2.5" style={{ marginTop: 3, flexShrink: 0 }}><polyline points="20 6 9 17 4 12"/></svg>
-                    <span className="lp-feat-list-text">{t}</span>
-                  </div>
-                ))}
-              </div>
+              <FeatureList items={[
+                "No black-box algorithm - view and adjust topic weights yourself",
+                "Fresh articles re-ranked every few hours from live sources",
+                "Trending stories surface automatically across all your interests",
+              ]} />
             </div>
             <div className="lp-feat-visual" style={{ direction: "ltr" }}>
               <div style={{ fontSize: 10, color: "var(--lp-sources-label)", marginBottom: 10, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase" }}>Your topics</div>

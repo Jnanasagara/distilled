@@ -154,6 +154,8 @@ export default function WelcomeModal() {
       aria-modal="true"
       aria-label="Welcome to Distilled"
       onClick={(e) => { if (e.target === e.currentTarget) dismiss(); }}
+      onKeyDown={(e) => { if (e.key === "Escape") dismiss(); }}
+      tabIndex={-1}
     >
       <div style={{
         background: "var(--bg-card)", borderRadius: 20,

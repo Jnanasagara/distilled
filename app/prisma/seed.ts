@@ -73,7 +73,7 @@ async function main() {
 
   // Create/Update default normal user
   const userEmail = "user@distilled.app";
-  const userPassword = "UserPassword123";
+  const userPassword = process.env.SEED_USER_PASSWORD ?? "UserPassword123"; // NOSONAR - dev seed only
   const hashedUserPassword = await bcrypt.hash(userPassword, 10);
   await prisma.user.upsert({
     where: { email: userEmail },
