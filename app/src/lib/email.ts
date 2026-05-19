@@ -244,6 +244,13 @@ export async function sendPasswordResetEmail(email: string, token: string) {
   }
 }
 
+function linkifyForEmail(text: string): string {
+  return text.replace(
+    /(https?:\/\/[^\s<>"]+)/g,
+    (url) => `<a href="${url}" style="color:#f97316;text-decoration:underline;">${url}</a>`
+  );
+}
+
 export async function sendAnnouncementEmail(
   email: string,
   name: string | null,
@@ -265,7 +272,7 @@ export async function sendAnnouncementEmail(
           <div style="padding:32px;">
             ${firstName ? `<p style="font-size:14px;color:#64748b;margin:0 0 12px;">Hi ${firstName},</p>` : ""}
             <h1 style="font-size:20px;font-weight:800;color:#0f172a;margin:0 0 12px;letter-spacing:-0.4px;">${title}</h1>
-            <p style="font-size:15px;color:#475569;margin:0 0 28px;line-height:1.7;white-space:pre-wrap;">${message}</p>
+            <p style="font-size:15px;color:#475569;margin:0 0 28px;line-height:1.7;white-space:pre-wrap;">${linkifyForEmail(message)}</p>
             <a href="${process.env.NEXTAUTH_URL}/feed" style="display:inline-block;padding:12px 24px;background:#0f172a;color:#ffffff;text-decoration:none;border-radius:10px;font-size:14px;font-weight:700;">
               Open Distilled
             </a>

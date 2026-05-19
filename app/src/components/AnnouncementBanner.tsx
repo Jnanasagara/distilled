@@ -4,6 +4,15 @@ import { useEffect, useState } from "react";
 
 type Announcement = { id: string; title: string; message: string };
 
+function linkify(text: string) {
+  const parts = text.split(/(https?:\/\/[^\s]+)/g);
+  return parts.map((part, i) =>
+    /^https?:\/\//.test(part)
+      ? <a key={i} href={part} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)", textDecoration: "underline" }}>{part}</a>
+      : part
+  );
+}
+
 const STORAGE_KEY = "dismissed_announcements";
 
 function getDismissed(): string[] {
@@ -62,7 +71,7 @@ export default function AnnouncementBanner() {
         <span className="ann-icon">📢</span>
         <div className="ann-content">
           <div className="ann-title">{announcement.title}</div>
-          <div className="ann-message">{announcement.message}</div>
+          <div className="ann-message">{linkify(announcement.message)}</div>
         </div>
         <button
           className="ann-close"
