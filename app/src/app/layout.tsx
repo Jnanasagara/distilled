@@ -19,13 +19,8 @@ export const metadata: Metadata = {
   description: "Mindful content consumption",
   manifest: "/site.webmanifest",
   icons: {
-    icon: [
-      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
-      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
-    ],
-    apple: [
-      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
-    ],
+    icon: "/logo.jpeg",
+    apple: "/logo.jpeg",
   },
 };
 
@@ -36,9 +31,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <div className="bg-ambient" aria-hidden="true">
+          <div className="bg-orb bg-orb-1" />
+          <div className="bg-orb bg-orb-2" />
+          <div className="bg-orb bg-orb-3" />
+        </div>
         <Providers>
           <ServiceWorkerRegistration />
           {children}
